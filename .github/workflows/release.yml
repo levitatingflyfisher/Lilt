@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Lilt
+
+      - uses: actions/checkout@v4
+        with:
+          repository: openhearth/eloEngine
+          path: eloEngine
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: Lilt
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: Lilt
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run tests
+        working-directory: Lilt
+        run: flutter test
+
+  build-and-release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Lilt
+
+      - uses: actions/checkout@v4
+        with:
+          repository: openhearth/eloEngine
+          path: eloEngine
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.x'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        working-directory: Lilt
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: Lilt
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build split APKs
+        working-directory: Lilt
+        run: flutter build apk --split-per-abi --release
+
+      - name: Build AAB
+        working-directory: Lilt
+        run: flutter build appbundle --release
+
+      - name: Generate SHA256 checksums
+        working-directory: Lilt/build/app/outputs/flutter-apk
+        run: |
+          for f in *.apk; do
+            sha256sum "$f" > "${f}.sha256"
+          done
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            Lilt/build/app/outputs/flutter-apk/*.apk
+            Lilt/build/app/outputs/flutter-apk/*.sha256
+            Lilt/build/app/outputs/bundle/release/*.aab
+          generate_release_notes: true
+          draft: true
