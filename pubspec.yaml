@@ -1,0 +1,53 @@
+name: lilt
+description: "Baby name ranking for couples. Local-first, no account required."
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Navigation
+  go_router: ^15.1.0
+
+  # Local database
+  drift: ^2.25.0
+  sqlite3_flutter_libs: ^0.5.0
+  path_provider: ^2.1.5
+  path: ^1.9.1
+
+  # ELO ranking engine (local path dep)
+  elo_engine:
+    path: ../eloEngine
+
+  # IDs + utilities
+  uuid: ^4.5.1
+  collection: ^1.19.1
+
+  # Sharing + export
+  share_plus: ^10.0.0
+  pdf: ^3.11.0
+
+  # Settings persistence
+  shared_preferences: ^2.3.4
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  build_runner: ^2.4.15
+  drift_dev: ^2.25.0
+  sqlite3: ^2.9.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/names.json
