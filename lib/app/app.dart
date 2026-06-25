@@ -19,10 +19,16 @@ class LiltApp extends ConsumerWidget {
       ),
       routerConfig: router,
       builder: (context, child) {
-        return bootstrap.when(
+        final resolved = bootstrap.when(
           loading: () => const _BootstrapSplash(),
           error: (e, st) => _BootstrapError(error: e),
           data: (_) => child ?? const SizedBox.shrink(),
+        );
+        final inner = resolved;
+        if (MediaQuery.of(context).size.width <= 760) return inner;
+        return ColoredBox(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          child: Center(child: SizedBox(width: 760, child: inner)),
         );
       },
     );
