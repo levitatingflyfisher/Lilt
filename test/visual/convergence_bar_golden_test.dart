@@ -1,6 +1,7 @@
 import 'package:elo_engine/elo_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lilt/app/theme.dart';
 import 'package:lilt/features/matchup/matchup_notifier.dart';
 import 'package:lilt/features/matchup/matchup_screen.dart' show ConvergenceBar;
 
@@ -14,11 +15,9 @@ import 'visual_golden_helper.dart';
 /// [MatchupState], which we build from a tiny in-memory [EloEngine] (no DB,
 /// no Riverpod required).
 void main() {
-  // Mirrors the real app theme (lib/app/app.dart).
-  final theme = ThemeData(
-    colorSchemeSeed: const Color(0xFF8B6F47),
-    useMaterial3: true,
-  );
+  // The real app theme (lib/app/theme.dart) — goldens render the shipped
+  // openhearth_design grammar, not a hand-rolled mirror that can drift.
+  final theme = LiltTheme.light();
 
   // A mid-progress, not-yet-converged state. `progressLabel` renders
   // "Match 5 of ~12" and the bar fills to ~0.42.

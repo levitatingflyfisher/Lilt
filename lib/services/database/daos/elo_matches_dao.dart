@@ -11,7 +11,7 @@ class EloMatchesDao extends DatabaseAccessor<AppDatabase>
   Future<List<EloMatchRow>> getMatchesForSession(String sessionId) =>
       (select(eloMatchRows)
             ..where((t) => t.sessionId.equals(sessionId))
-            ..orderBy([(t) => OrderingTerm.asc(t.matchedAt)]))
+            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
           .get();
 
   Future<void> insertMatch(EloMatchRowsCompanion match) =>
@@ -20,7 +20,7 @@ class EloMatchesDao extends DatabaseAccessor<AppDatabase>
   Future<void> deleteLastMatch(String sessionId) async {
     final last = await (select(eloMatchRows)
           ..where((t) => t.sessionId.equals(sessionId))
-          ..orderBy([(t) => OrderingTerm.desc(t.matchedAt)])
+          ..orderBy([(t) => OrderingTerm.desc(t.id)])
           ..limit(1))
         .getSingleOrNull();
     if (last != null) {

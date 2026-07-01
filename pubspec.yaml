@@ -26,22 +26,40 @@ dependencies:
   elo_engine:
     path: ../eloEngine
 
+  # OpenHearth design grammar (sibling path dep): OhTheme tri-theme +
+  # OhColors tokens + OhTypography. Fonts are resolved from THIS app's
+  # bundled assets (see the fonts: block below) — the package never
+  # fetches from the network.
+  openhearth_design:
+    path: ../ohStyle/openhearth_design
+
   # IDs + utilities
   uuid: ^4.5.1
   collection: ^1.19.1
 
   # Sharing + export
   share_plus: ^10.0.0
-  pdf: ^3.11.0
+  file_picker: ^8.0.0
 
   # Settings persistence
   shared_preferences: ^2.3.4
 
   cupertino_icons: ^1.0.8
 
+  # Encrypted backup (sibling path deps — see README "Clone the sibling
+  # packages"). SANCTUARY-BRIEF §3.
+  sanctuary_auth_core:
+    path: ../packages/sanctuary_auth_core
+  sanctuary_backup_ui:
+    path: ../packages/sanctuary_backup_ui
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Fleet standards as tests that can fail (sibling path dep):
+  # test/fleet_conformance_test.dart runs the whole suite.
+  oh_fleet_conformance:
+    path: ../packages/oh_fleet_conformance
   flutter_lints: ^6.0.0
   build_runner: ^2.4.15
   drift_dev: ^2.25.0
@@ -51,3 +69,25 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/names.json
+
+  # Bundled faces for the openhearth_design grammar (OFL; same files the
+  # rest of the fleet ships). OhTypography looks these families up by name.
+  fonts:
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/Lora-Regular.ttf
+        - asset: assets/fonts/Lora-Italic.ttf
+          style: italic
+        - asset: assets/fonts/Lora-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Lora-Bold.ttf
+          weight: 700
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/Nunito-Regular.ttf
+        - asset: assets/fonts/Nunito-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Nunito-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Nunito-Bold.ttf
+          weight: 700

@@ -146,9 +146,16 @@ class _ShortlistButtonState extends ConsumerState<_ShortlistButton> {
       onPressed: inList
           ? null
           : () async {
+              // Flip to "in list" synchronously so a rapid second tap hits the
+              // now-disabled button (onPressed == null) instead of inserting a
+              // duplicate row. Revert if the write fails.
+              setState(() => _inList = true);
               final repo = ref.read(shortlistRepositoryProvider);
-              await repo.add(widget.nameId);
-              if (mounted) setState(() => _inList = true);
+              try {
+                await repo.add(widget.nameId);
+              } catch (_) {
+                if (mounted) setState(() => _inList = false);
+              }
             },
     );
   }

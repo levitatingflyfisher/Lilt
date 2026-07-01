@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#8B6F47"/>
+  <g fill="#F4ECDD">
+    <!-- stem -->
+    <rect x="250" y="150" width="30" height="212" rx="15"/>
+    <!-- flag: one clean quaver flag flowing off the stem top -->
+    <path d="M 265 152
+             C 360 176, 388 250, 320 314
+             C 372 250, 352 196, 265 205 Z"/>
+    <!-- notehead -->
+    <ellipse cx="203" cy="352" rx="72" ry="53" transform="rotate(-24 203 352)"/>
+  </g>
+</svg>
