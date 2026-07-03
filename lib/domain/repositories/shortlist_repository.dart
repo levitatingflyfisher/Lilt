@@ -31,14 +31,19 @@ class ShortlistRepository {
 
   Future<bool> isInShortlist(String nameId) => _dao.isInShortlist(nameId);
 
-  Future<void> add(String nameId, {String? note}) => _dao.add(
-        ShortlistEntriesCompanion.insert(
-          id: _uuid.v4(),
-          nameId: nameId,
-          note: Value(note),
-          addedAt: DateTime.now(),
-        ),
-      );
+  Future<void> add(String nameId, {String? note}) async {
+    // Idempotent: a repeated add (e.g. a double-tap on "Add to Shortlist") must
+    // not create a duplicate row.
+    if (await _dao.isInShortlist(nameId)) return;
+    await _dao.add(
+      ShortlistEntriesCompanion.insert(
+        id: _uuid.v4(),
+        nameId: nameId,
+        note: Value(note),
+        addedAt: DateTime.now(),
+      ),
+    );
+  }
 
   Future<void> updateNote(String id, String? note) =>
       _dao.updateNote(id, note);

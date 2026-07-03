@@ -38,6 +38,19 @@ void main() {
     expect(await db.shortlistDao.isInShortlist('eliot-m'), isTrue);
   });
 
+  test('isInShortlist is robust to duplicate rows (double-tap)', () async {
+    // A double-tap can insert two rows for the same name; isInShortlist must
+    // not crash (getSingleOrNull throws on >1 row).
+    await db.shortlistDao.add(ShortlistEntriesCompanion.insert(
+      id: 'e1', nameId: 'eliot-m', addedAt: DateTime(2026),
+    ));
+    await db.shortlistDao.add(ShortlistEntriesCompanion.insert(
+      id: 'e2', nameId: 'eliot-m', addedAt: DateTime(2026),
+    ));
+    expect(await db.shortlistDao.isInShortlist('eliot-m'), isTrue,
+        reason: 'duplicate rows must be tolerated, not crash');
+  });
+
   test('updateNote sets note on existing entry', () async {
     await db.shortlistDao.add(ShortlistEntriesCompanion.insert(
       id: 'entry-1', nameId: 'eliot-m', addedAt: DateTime(2026),

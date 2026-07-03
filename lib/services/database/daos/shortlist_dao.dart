@@ -14,10 +14,13 @@ class ShortlistDao extends DatabaseAccessor<AppDatabase>
           .get();
 
   Future<bool> isInShortlist(String nameId) async {
-    final row = await (select(shortlistEntries)
-          ..where((t) => t.nameId.equals(nameId)))
-        .getSingleOrNull();
-    return row != null;
+    // Existence check, not getSingleOrNull() — a double-tap can leave more than
+    // one row for a name, and getSingleOrNull throws on >1 row.
+    final rows = await (select(shortlistEntries)
+          ..where((t) => t.nameId.equals(nameId))
+          ..limit(1))
+        .get();
+    return rows.isNotEmpty;
   }
 
   Future<void> add(ShortlistEntriesCompanion entry) =>

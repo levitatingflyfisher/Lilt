@@ -38,6 +38,14 @@ void main() {
     expect(await repo.isInShortlist('eliot-m'), isTrue);
   });
 
+  test('add is idempotent — a repeated add does not create a duplicate',
+      () async {
+    await repo.add('eliot-m');
+    await repo.add('eliot-m');
+    expect((await repo.getAll()).length, 1,
+        reason: 'adding an already-shortlisted name must not duplicate it');
+  });
+
   test('updateNote persists note', () async {
     await repo.add('eliot-m');
     final id = (await repo.getAll()).first.id;
