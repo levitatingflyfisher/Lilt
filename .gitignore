@@ -45,9 +45,9 @@ app.*.map.json
 /android/app/release
 
 # Local working artifacts — do not commit
+# (AGENTS.md is a SHIPPED doc — intentionally not ignored)
 CLAUDE.md
 GEMINI.md
-AGENTS.md
 docs/superpowers/
 .superpowers/
 /docs/superpowers/

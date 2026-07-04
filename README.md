@@ -1,16 +1,70 @@
-# lilt
+# Lilt
 
-A new Flutter project.
+**Baby-name ranking for couples. Local-first, no account required.**
 
-## Getting Started
+> Turn "argue over a list" into a game of *this or that*. Rank names by rapid pairwise
+> choice, and — for two people — reveal where you already agree, but only once you've
+> *both* finished. Everything stays on your device.
 
-This project is a starting point for a Flutter application.
+Choosing a name from a list of a thousand is miserable: you anchor, you defer, you
+peek. Lilt only ever asks the easy question — *Eliot or Mara?* — a few hundred times,
+and computes the hard answer (a stable ranking) from your choices. Two partners rank
+the same pool privately; results stay hidden until both are done, then Lilt shows the
+overlap.
 
-A few resources to get you started if this is your first Flutter project:
+## What it does
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Set up a pool** — filter by gender, pick a size (30 / 60 / 120 / custom), add your
+  own names, hard-veto ones you'd never use, and run a quick swipe-veto pass.
+- **Rank by pairwise choice** — tap the name you prefer, skip a toss-up, undo a
+  misfire; a live estimate tracks how close you are to a stable result.
+- **See your ranking** — a full ordered list with confidence bars, plus an optional
+  "show methodology" view that runs fifteen ranking algorithms and tells you how much
+  they agree.
+- **Rank together** — hand the phone to your partner, they rank the same pool, and a
+  **Matches** screen surfaces the names you both put near the top.
+- **Keep a shortlist** — save favourites with notes; share it as plain text when you're
+  ready.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Privacy in one line
+
+Everything — names, sessions, every comparison — lives in an on-device SQLite database.
+There is no account, no server, and no network call. The *only* thing that ever leaves
+your phone is a plain-text list you explicitly tap **Share** on. See
+[docs/privacy-model.md](docs/privacy-model.md).
+
+## Quickstart (build & run)
+
+Lilt is a Flutter app and depends on the sibling [`eloEngine`](../eloEngine) library by
+path, so clone both **side by side**:
+
+```bash
+git clone git@github.com:levitatingflyfisher/eloEngine.git
+git clone git@github.com:levitatingflyfisher/Lilt.git
+cd Lilt
+
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs   # Drift codegen
+flutter run                                                # device / emulator / chrome
+```
+
+Full instructions, including the web (PWA) and APK builds, are in
+[docs/how-to/build-and-run.md](docs/how-to/build-and-run.md).
+
+## See the docs
+
+- **[VISION.md](VISION.md)** — the one idea, the invariants, and an honest scorecard of
+  what's real vs. aspirational.
+- **[docs/README.md](docs/README.md)** — the documentation hub
+  ([Diátaxis](https://diataxis.fr/): tutorials · how-to · reference · explanation).
+- **[AGENTS.md](AGENTS.md)** — guidance for anyone (human or agent) editing this repo.
+
+## Tech
+
+Flutter · Clean Architecture (domain / data / presentation) · Riverpod · Drift/SQLite ·
+go_router. Ranking is delegated to the [`eloEngine`](../eloEngine) library. Ships as an
+Android APK and a PWA.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
