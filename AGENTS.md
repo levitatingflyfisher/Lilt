@@ -85,9 +85,11 @@ flutter test                                               # unit + golden/overf
 flutter analyze                                            # lints (analysis_options.yaml) — must pass
 ```
 
-- **`eloEngine` must be a sibling checkout.** `pubspec.yaml` depends on it by path
-  (`../eloEngine`). Clone it next to this repo, or `flutter pub get` fails. The release
-  workflow checks out `openhearth/eloEngine` alongside `Lilt`.
+- **`eloEngine`, `sanctuary_auth_core`, `sanctuary_backup_ui` must be sibling
+  checkouts.** `pubspec.yaml` depends on all three by path (`../eloEngine`,
+  `../packages/sanctuary_auth_core`, `../packages/sanctuary_backup_ui`). Clone them next
+  to this repo (see the [README](README.md) layout), or `flutter pub get` fails. The
+  release workflow checks out all three alongside `Lilt`.
 - **Drift codegen is not optional.** The `*.g.dart` files are generated from
   `tables.dart` / the DAOs; re-run `build_runner` whenever you change the schema, a DAO,
   or a `@DataClassName`.

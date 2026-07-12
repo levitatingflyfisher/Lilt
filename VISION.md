@@ -93,6 +93,11 @@ tests win; if the tests and reality disagree, reality wins. As of v1.0.0:
 - Runs as an **Android APK and a PWA** (Drift conditional connection + WASM on web).
   Golden + overflow visual tests cover home, matchup, the ranked tile, and the
   convergence bar at text scale 1.0 and 3.0.
+- **Encrypted backup/restore** (`.ohbk`, via `sanctuary_auth_core` /
+  `sanctuary_backup_ui`) — a 12-word recovery phrase, destructive-replace restore in one
+  transaction, and a domain-separated key so a Lilt backup only ever opens in Lilt. This
+  is single-device recovery (move *your* data to a new phone), not the separate-phones
+  merge described under "Mid" below.
 
 **Aspirational — still a hope, or thinly verified:**
 - The **couple/results *screens* have no widget tests** — only the data layer beneath

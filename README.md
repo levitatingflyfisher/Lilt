@@ -29,23 +29,40 @@ overlap.
 ## Privacy in one line
 
 Everything — names, sessions, every comparison — lives in an on-device SQLite database.
-There is no account, no server, and no network call. The *only* thing that ever leaves
-your phone is a plain-text list you explicitly tap **Share** on. See
-[docs/privacy-model.md](docs/privacy-model.md).
+There is no account, no server, and no network call. What leaves your phone is a
+plain-text list you explicitly tap **Share** on, or an **encrypted** `.ohbk` backup file
+you explicitly export (Settings → Encrypted Backup) — Lilt itself never transmits
+anything. See [docs/privacy-model.md](docs/privacy-model.md) and
+[docs/how-to/encrypted-backup.md](docs/how-to/encrypted-backup.md).
 
 ## Quickstart (build & run)
 
-Lilt is a Flutter app and depends on the sibling [`eloEngine`](../eloEngine) library by
-path, so clone both **side by side**:
+Lilt is a Flutter app and depends on three sibling packages by path — clone all four
+**side by side**:
 
 ```bash
 git clone git@github.com:levitatingflyfisher/eloEngine.git
+git clone https://github.com/levitatingflyfisher/sanctuaryAuthCore packages/sanctuary_auth_core
+git clone https://github.com/levitatingflyfisher/sanctuaryBackupUi packages/sanctuary_backup_ui
 git clone git@github.com:levitatingflyfisher/Lilt.git
 cd Lilt
 
 flutter pub get
 dart run build_runner build --delete-conflicting-outputs   # Drift codegen
 flutter run                                                # device / emulator / chrome
+```
+
+`packages/sanctuary_auth_core` and `packages/sanctuary_backup_ui` (the encrypted-backup
+primitives and UI, shared with the rest of the OpenHearth fleet — see
+[docs/how-to/encrypted-backup.md](docs/how-to/encrypted-backup.md)) must sit next to
+`Lilt/` and `eloEngine/`, matching this layout:
+
+```
+eloEngine/
+packages/
+  sanctuary_auth_core/
+  sanctuary_backup_ui/
+Lilt/                        # this repo
 ```
 
 Full instructions, including the web (PWA) and APK builds, are in

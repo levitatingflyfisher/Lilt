@@ -16,7 +16,7 @@ and [limitations](../limitations.md). "Tests" means automated coverage that exis
 | Couple results ("Matches", top-20 overlap) | ✅ Built | **None** — thinly verified |
 | Name detail | ✅ Built | — |
 | Shortlist (list, notes, remove, share) | ✅ Built | — |
-| Settings (τ, clear sessions, version) | ✅ Built | — |
+| Settings (τ, clear sessions, encrypted backup, version) | ✅ Built | Widget + overflow (backup section) |
 
 ## Capabilities
 
@@ -37,14 +37,19 @@ and [limitations](../limitations.md). "Tests" means automated coverage that exis
 | **PDF export** | ❌ Not wired — `pdf` dep present but unused |
 | **Cross-device / separate-phones couple sync** | ❌ Not built (no server; horizon) |
 | **Localization / non-English catalog** | ❌ Not built (~1,636 EN/US names) |
-| **In-app full backup/export** | ❌ Not built (plain-text share only) |
+| Encrypted backup / restore (`.ohbk`, custom names + sessions + matches + shortlist) | ✅ Built ([sanctuary_auth_core](../../../packages/sanctuary_auth_core) / [sanctuary_backup_ui](../../../packages/sanctuary_backup_ui)); see [how-to](../how-to/encrypted-backup.md) |
 | Accounts / cloud / analytics / ads | ❌ **Intentionally absent** ([ADR-0005](../adr/0005-local-first-no-account.md)) |
 
 ## Test surface (what exists)
 
 - **Unit** (`test/`): 4 DAO tests + 3 repository tests on in-memory SQLite (incl.
-  `buildEngine`/record/undo); the matchup notifier.
+  `buildEngine`/record/undo); the matchup notifier; the sanctuary backup serializer
+  (round-trip, wrong-app/future-schema rejection, catalog preservation) and controller
+  (export → restore end-to-end through the real crypto package).
 - **Visual** (`test/visual/`): golden + overflow tests for home, matchup, ranked-name
-  tile, and the convergence bar, each at text scale 1.0 and 3.0, phone and narrow widths.
-- **Gap:** widget tests for the solo- and couple-results screens, name detail, shortlist,
-  and settings.
+  tile, and the convergence bar, each at text scale 1.0 and 3.0, phone and narrow widths;
+  the settings screen (incl. the backup section) at 320dp / textScale 3.0.
+- **Widget** (`test/widget/`): BackupSettingsSection across its ghost/set-up/exported
+  states.
+- **Gap:** widget tests for the solo- and couple-results screens, name detail, and
+  shortlist.

@@ -9,7 +9,9 @@ Read this before adopting or building on Lilt. It is the honest companion to the
 There is no server and no sync ([ADR-0005](adr/0005-local-first-no-account.md)). Couple
 mode works by **handing one physical device** between partners, who rank the same pool in
 turn. Two people on two separate phones cannot combine their rankings today. All data lives
-on the one device it was created on; backup and restore are whatever your OS provides.
+on the one device it was created on; moving it to a *new* device is a manual
+[encrypted backup export + restore](how-to/encrypted-backup.md), not sync — there is no
+live, automatic cross-device state.
 
 ## PDF export doesn't exist
 
@@ -52,8 +54,9 @@ lukewarm about, simply don't appear. (eloEngine has a `merge`/`snapshot` API tha
 
 Web/PWA data lives in browser storage; the app requests persistence, but an aggressive
 browser or a "clear site data" still wipes it. On native, data lives in the app documents
-directory and is removed with the app. There is no in-app export/backup of the full
-database — only the plain-text shares above.
+directory and is removed with the app. An
+[encrypted backup](how-to/encrypted-backup.md) is the mitigation — export before you
+uninstall, clear site data, or switch devices.
 
 ## Not a naming *authority*
 

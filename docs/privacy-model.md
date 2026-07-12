@@ -27,14 +27,20 @@ browser storage (the app requests **persistent** storage so a PWA isn't silently
 
 ## What leaves the device
 
-Exactly one thing, and only when you tap it: a **plain-text Share**.
+Two things, and only when you tap them — Lilt itself makes no network request either
+way:
 
-- **Solo results** → shares your top 10 names as text.
-- **Shortlist** → shares your saved names (and their notes) as text.
+- A **plain-text Share**: solo results (top 10 names) or your shortlist (names + notes),
+  sent wherever you choose via the OS share sheet. There is **no** PDF export today (the
+  `pdf` dependency is unused — see [limitations](limitations.md)).
+- An **encrypted backup**: Settings → Encrypted Backup → Export produces a ChaCha20-
+  Poly1305-encrypted `.ohbk` file (custom names, sessions, comparisons, and shortlist —
+  never the bundled name catalog), handed to the same OS share sheet. Without the
+  12-word recovery phrase it's opaque ciphertext. See
+  [docs/how-to/encrypted-backup.md](how-to/encrypted-backup.md).
 
-That's the entire egress surface. The share goes wherever *you* send it (messages, notes,
-email) via the OS share sheet — Lilt itself makes no network request. There is **no** PDF
-export today (the `pdf` dependency is unused — see [limitations](limitations.md)).
+That's the entire egress surface — both are things *you* explicitly trigger and send
+wherever you choose.
 
 ## The threat model, briefly
 

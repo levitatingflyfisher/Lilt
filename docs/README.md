@@ -30,6 +30,8 @@ your partner in 10 minutes" walkthrough. If you write one, put it in `docs/tutor
 
 - **[Build & run](how-to/build-and-run.md)** — the sibling-checkout requirement, Drift
   codegen, and running on device / web.
+- **[Encrypted backup & restore](how-to/encrypted-backup.md)** — set up a recovery
+  phrase, export/restore an `.ohbk` file, and the honest recovery-phrase warning.
 - **[Ship a PWA and an APK](how-to/ship-pwa-and-apk.md)** — the two release targets and
   the tagged GitHub Actions build.
 - **[Customize the name catalog](how-to/customize-the-name-catalog.md)** — regenerate

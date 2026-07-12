@@ -3,21 +3,30 @@
 Task-oriented. Assumes you have the Flutter SDK installed
 (`flutter --version` ≥ the constraint in `pubspec.yaml`, Dart SDK ^3.10.7).
 
-## 1. Clone `eloEngine` and `Lilt` side by side
+## 1. Clone the sibling packages next to `Lilt`
 
-Lilt depends on the ranking library by **path** (`elo_engine: { path: ../eloEngine }`), so
-the two repos must be siblings ([ADR-0003](../adr/0003-ranking-in-separate-library.md)):
+Lilt depends on three libraries by **path**: the ranking engine
+(`elo_engine: { path: ../eloEngine }`,
+[ADR-0003](../adr/0003-ranking-in-separate-library.md)) and the encrypted-backup pair,
+`sanctuary_auth_core` + `sanctuary_backup_ui`
+([encrypted backup how-to](encrypted-backup.md)). All three repos must be siblings of
+`Lilt/`:
 
 ```bash
 git clone git@github.com:levitatingflyfisher/eloEngine.git
+git clone https://github.com/levitatingflyfisher/sanctuaryAuthCore packages/sanctuary_auth_core
+git clone https://github.com/levitatingflyfisher/sanctuaryBackupUi packages/sanctuary_backup_ui
 git clone git@github.com:levitatingflyfisher/Lilt.git
 # directory layout must be:
 #   some-dir/
 #     eloEngine/
+#     packages/
+#       sanctuary_auth_core/
+#       sanctuary_backup_ui/
 #     Lilt/
 ```
 
-If `eloEngine` isn't next to `Lilt`, `flutter pub get` fails to resolve the path
+If any of the three isn't in place, `flutter pub get` fails to resolve the path
 dependency.
 
 ## 2. Fetch dependencies and generate code
@@ -60,7 +69,7 @@ flutter analyze     # static analysis per analysis_options.yaml
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `pub get` can't resolve `elo_engine` | `eloEngine` not a sibling dir | Clone it next to `Lilt` (step 1) |
+| `pub get` can't resolve `elo_engine` / `sanctuary_auth_core` / `sanctuary_backup_ui` | one of the three sibling repos is missing | Clone it into the right place next to `Lilt` (step 1) |
 | Analyzer: undefined `_$AppDatabase` / DAO classes | codegen not run | `dart run build_runner build --delete-conflicting-outputs` |
 | Web build: DB errors / blank after splash | missing WASM assets | Ensure `web/sqlite3.wasm` and `web/drift_worker.js` are present |
 | Names never load, stuck on splash | asset not bundled | Confirm `assets/data/names.json` is listed under `flutter: assets:` in `pubspec.yaml` |
