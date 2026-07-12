@@ -33,11 +33,19 @@ dependencies:
   # Sharing + export
   share_plus: ^10.0.0
   pdf: ^3.11.0
+  file_picker: ^8.0.0
 
   # Settings persistence
   shared_preferences: ^2.3.4
 
   cupertino_icons: ^1.0.8
+
+  # Encrypted backup (sibling path deps — see README "Clone the sibling
+  # packages"). SANCTUARY-BRIEF §3.
+  sanctuary_auth_core:
+    path: ../packages/sanctuary_auth_core
+  sanctuary_backup_ui:
+    path: ../packages/sanctuary_backup_ui
 
 dev_dependencies:
   flutter_test:
