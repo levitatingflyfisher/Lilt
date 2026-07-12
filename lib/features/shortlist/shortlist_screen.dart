@@ -4,8 +4,10 @@ import 'package:lilt/core/providers/repository_providers.dart';
 import 'package:lilt/domain/models/shortlist_entry.dart';
 import 'package:share_plus/share_plus.dart' show Share;
 
-final _shortlistEntriesProvider =
-    FutureProvider<List<ShortlistEntry>>((ref) {
+/// Public so other screens (and the post-restore invalidation set — see
+/// main.dart's sanctuaryBackupConfigProvider override) can refresh it after
+/// mutations, matching allSessionsProvider's convention.
+final shortlistEntriesProvider = FutureProvider<List<ShortlistEntry>>((ref) {
   return ref.watch(shortlistRepositoryProvider).getAll();
 });
 
@@ -14,7 +16,7 @@ class ShortlistScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entries = ref.watch(_shortlistEntriesProvider);
+    final entries = ref.watch(shortlistEntriesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -78,7 +80,7 @@ class _ShortlistBody extends ConsumerWidget {
                 onPressed: () => ref
                     .read(shortlistRepositoryProvider)
                     .remove(entry.id)
-                    .then((_) => ref.invalidate(_shortlistEntriesProvider)),
+                    .then((_) => ref.invalidate(shortlistEntriesProvider)),
               ),
             ],
           ),
@@ -113,7 +115,7 @@ class _ShortlistBody extends ConsumerWidget {
       await ref
           .read(shortlistRepositoryProvider)
           .updateNote(entry.id, result.isEmpty ? null : result);
-      ref.invalidate(_shortlistEntriesProvider);
+      ref.invalidate(shortlistEntriesProvider);
     }
     controller.dispose();
   }

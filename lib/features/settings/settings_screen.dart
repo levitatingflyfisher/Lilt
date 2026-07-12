@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lilt/core/providers/repository_providers.dart';
 import 'package:lilt/core/providers/settings_providers.dart';
 import 'package:lilt/features/home/home_screen.dart';
+import 'package:sanctuary_backup_ui/sanctuary_backup_ui.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -49,6 +50,7 @@ class SettingsScreen extends ConsumerWidget {
             trailing: const Icon(Icons.delete_outline),
             onTap: () => _confirmClearSessions(context, ref),
           ),
+          const BackupSettingsSection(),
           const Divider(),
           const ListTile(
             title: Text('Version'),
