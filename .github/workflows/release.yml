@@ -20,6 +20,19 @@ jobs:
           repository: openhearth/eloEngine
           path: eloEngine
 
+      # Sibling path deps for encrypted backup (SANCTUARY-BRIEF §3, §4.W2).
+      # pubspec.yaml points at ../packages/..., so these must land next to
+      # the Lilt checkout above, matching the eloEngine sibling above.
+      - uses: actions/checkout@v4
+        with:
+          repository: levitatingflyfisher/sanctuaryAuthCore
+          path: packages/sanctuary_auth_core
+
+      - uses: actions/checkout@v4
+        with:
+          repository: levitatingflyfisher/sanctuaryBackupUi
+          path: packages/sanctuary_backup_ui
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -55,6 +68,19 @@ jobs:
         with:
           repository: openhearth/eloEngine
           path: eloEngine
+
+      # Sibling path deps for encrypted backup (SANCTUARY-BRIEF §3, §4.W2).
+      # pubspec.yaml points at ../packages/..., so these must land next to
+      # the Lilt checkout above, matching the eloEngine sibling above.
+      - uses: actions/checkout@v4
+        with:
+          repository: levitatingflyfisher/sanctuaryAuthCore
+          path: packages/sanctuary_auth_core
+
+      - uses: actions/checkout@v4
+        with:
+          repository: levitatingflyfisher/sanctuaryBackupUi
+          path: packages/sanctuary_backup_ui
 
       - uses: actions/setup-java@v4
         with:
