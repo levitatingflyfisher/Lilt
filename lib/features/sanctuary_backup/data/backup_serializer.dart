@@ -37,7 +37,14 @@ class LiltBackupSerializer implements BackupSerializer {
           ..where((t) => t.isCustom.equals(true)))
         .get();
     final allSessions = await _db.select(_db.sessions).get();
-    final allMatches = await _db.select(_db.eloMatchRows).get();
+    // Ranking is a *sequential* Elo replay from this history
+    // (SessionRepository.buildEngine), and restore re-inserts with fresh
+    // autoincrement ids — ordering by id makes the dump order match
+    // getMatchesForSession's own `ORDER BY id ASC` explicitly, rather than
+    // relying on a bare SELECT's incidental rowid order.
+    final allMatches = await (_db.select(_db.eloMatchRows)
+          ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .get();
     final allShortlist = await _db.select(_db.shortlistEntries).get();
 
     final payload = <String, dynamic>{

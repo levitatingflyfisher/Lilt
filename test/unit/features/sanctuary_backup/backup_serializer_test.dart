@@ -149,6 +149,65 @@ void main() {
       expect(matches.single.outcome, equals('aWins'));
     });
 
+    test(
+        'restoreAll preserves match sequence — ranking is a sequential Elo '
+        'replay, so order-dependent (buildEngine reads via '
+        'getMatchesForSession ORDER BY id ASC)', () async {
+      await db.into(db.nameEntries).insert(NameEntriesCompanion.insert(
+            id: 'a-m', display: 'A', gender: 'm', variants: '[]'));
+      await db.into(db.nameEntries).insert(NameEntriesCompanion.insert(
+            id: 'b-m', display: 'B', gender: 'm', variants: '[]'));
+      await db.into(db.nameEntries).insert(NameEntriesCompanion.insert(
+            id: 'c-m', display: 'C', gender: 'm', variants: '[]'));
+      await db.into(db.sessions).insert(SessionsCompanion.insert(
+            id: 's-seq',
+            poolIds: '["a-m","b-m","c-m"]',
+            genderFilter: 'm',
+            poolSize: 3,
+            createdAt: now,
+          ));
+      // Three matches, deliberately recorded out of alphabetical order, so a
+      // reordering bug wouldn't be masked by a coincidentally-sorted insert.
+      await db.into(db.eloMatchRows).insert(EloMatchRowsCompanion.insert(
+            sessionId: 's-seq',
+            nameIdA: 'c-m',
+            nameIdB: 'a-m',
+            outcome: 'aWins',
+            matchedAt: now,
+          ));
+      await db.into(db.eloMatchRows).insert(EloMatchRowsCompanion.insert(
+            sessionId: 's-seq',
+            nameIdA: 'a-m',
+            nameIdB: 'b-m',
+            outcome: 'bWins',
+            matchedAt: now,
+          ));
+      await db.into(db.eloMatchRows).insert(EloMatchRowsCompanion.insert(
+            sessionId: 's-seq',
+            nameIdA: 'b-m',
+            nameIdB: 'c-m',
+            outcome: 'tie',
+            matchedAt: now,
+          ));
+
+      final before = await (db.select(db.eloMatchRows)
+            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+          .get();
+      final beforeSeq =
+          before.map((m) => (m.nameIdA, m.nameIdB, m.outcome)).toList();
+
+      final bytes = await serializer.dumpAll();
+      await serializer.restoreAll(bytes);
+
+      final after = await (db.select(db.eloMatchRows)
+            ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+          .get();
+      final afterSeq =
+          after.map((m) => (m.nameIdA, m.nameIdB, m.outcome)).toList();
+
+      expect(afterSeq, equals(beforeSeq));
+    });
+
     test('restoreAll wipes existing custom/session data before inserting',
         () async {
       await seedData();
