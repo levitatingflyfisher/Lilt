@@ -16,6 +16,10 @@ Widget _wrapWithProviders(
       // multi-second pumpAndSettle to let key derivation finish.
       cryptoServiceProvider.overrideWithValue(FakeCryptoService()),
       sanctuaryAppDomainProvider.overrideWithValue('lilt'),
+      // v0.2.0's vault tiles (and any restore's mandatory pre-restore
+      // snapshot) hit the platform vault store, which needs path_provider —
+      // absent in widget tests. Keep it in memory.
+      vaultStoreProvider.overrideWithValue(InMemoryVaultStore()),
       // Lilt's real backup wiring (SANCTUARY-BRIEF §4.W2).
       sanctuaryBackupConfigProvider.overrideWithValue(
         const SanctuaryBackupConfig(

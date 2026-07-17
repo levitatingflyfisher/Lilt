@@ -34,6 +34,11 @@ void main() {
       secureKeyStoreProvider.overrideWithValue(store),
       cryptoServiceProvider.overrideWithValue(const DefaultCryptoService()),
       sanctuaryAppDomainProvider.overrideWithValue('lilt'),
+      // v0.2.0's mandatory pre-restore snapshot writes to the vault before
+      // any destructive apply — without an in-memory store the platform
+      // vault (path_provider) is unavailable in tests and every restore
+      // fails closed as RestoreOutcome.snapshotFailed.
+      vaultStoreProvider.overrideWithValue(InMemoryVaultStore()),
       backupSerializerProvider
           .overrideWith((ref) => LiltBackupSerializer(database)),
       sanctuaryBackupConfigProvider.overrideWithValue(
@@ -140,6 +145,7 @@ void main() {
     final c = ProviderContainer(overrides: [
       secureKeyStoreProvider.overrideWithValue(InMemorySecureKeyStore()),
       cryptoServiceProvider.overrideWithValue(const DefaultCryptoService()),
+      vaultStoreProvider.overrideWithValue(InMemoryVaultStore()),
       // No sanctuaryAppDomainProvider override — stays at the null default.
       backupSerializerProvider
           .overrideWith((ref) => LiltBackupSerializer(db2)),
