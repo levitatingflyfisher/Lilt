@@ -152,8 +152,12 @@ class _MatchupBody extends ConsumerWidget {
                   OutlinedButton(
                     onPressed: () => _record(ref, MatchOutcome.tie),
                     style: OutlinedButton.styleFrom(
+                      // De-emphasized but ENABLED: use the secondary-text
+                      // role. `outline` is a border token — under the
+                      // openhearth_design grammar it resolves to linen300,
+                      // unreadable as text on the linen background.
                       foregroundColor:
-                          Theme.of(context).colorScheme.outline,
+                          Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     child: const Text("Don't care"),
                   ),
