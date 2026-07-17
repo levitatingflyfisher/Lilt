@@ -32,8 +32,22 @@ All notable changes to Lilt will be documented in this file.
 - Plain-JSON export tile for unencrypted, human-readable copies.
 - Silent freshness snapshot on app open when the newest one is older
   than 7 days and a backup key exists (post-frame, never blocks boot).
+- Fleet conformance suite (`oh_fleet_conformance`): the OpenHearth
+  standards as tests — canonical design grammar, backup-retention
+  enforcement, size budgets (`budgets.json` records baseline+5% for the
+  gzipped web JS and the arm64 APK), the zero-Android-permission claim
+  verified in both directions, and the canonical test/CI harness.
+- Push/PR CI workflow (analyze + test, debug-APK smoke, web-release
+  smoke at the deploy base-href), pinned to the fleet Flutter 3.38.7.
+  Release CI previously pointed its eloEngine clone at a nonexistent
+  org and never cloned ohStyle — both fixed.
 
 ### Changed
+- `test/flutter_test_config.dart` is now the fleet-canonical
+  FontManifest-aware variant (byte-identical across the fleet). It
+  loads the same bundled Lora/Nunito, via the asset manifest instead of
+  direct file reads; all 16 goldens verified pixel-stable under the
+  swap.
 - The "Don't care" matchup button's label now uses the secondary-text
   color role instead of the outline border token — under the grammar the
   border token is a pale linen that is unreadable as text.
@@ -42,3 +56,7 @@ All notable changes to Lilt will be documented in this file.
   validation gate so preview can never accept a file restore would
   reject. A wrong-app backup now surfaces as the standard corrupt-file
   outcome (same user-visible copy as before).
+
+### Removed
+- The unused `pdf` dependency (no import anywhere in `lib/` or `test/`)
+  and its 10 transitive packages.
