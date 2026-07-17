@@ -5,6 +5,16 @@ All notable changes to Lilt will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Dark mode. Lilt adopts the shared OpenHearth design grammar
+  (`openhearth_design`): `OhTheme.light` on warm linen by day and
+  `OhTheme.hearthDark`'s brown-black surfaces after sundown, following
+  the system setting. Lilt's taupe stays as the app-signature accent in
+  both. Dark mode arrives via the grammar rather than being hand-rolled —
+  the whole tri-theme surface/typography system comes from one shared
+  package.
+- Bundled Lora (headings) and Nunito (UI text) faces — the fleet's OFL
+  fonts — so the grammar renders its real typography offline, with zero
+  network font fetches.
 - Snapshot vault ("Previous backups" in Settings, via sanctuary_backup_ui
   v0.2.0): every encrypted export and every restore leaves a stamped
   on-device snapshot (keep-10, pinnable) you can restore, pin or delete.
@@ -24,6 +34,9 @@ All notable changes to Lilt will be documented in this file.
   than 7 days and a backup key exists (post-frame, never blocks boot).
 
 ### Changed
+- The "Don't care" matchup button's label now uses the secondary-text
+  color role instead of the outline border token — under the grammar the
+  border token is a pale linen that is unreadable as text.
 - Backup envelope validation now goes through the fleet-shared
   `BackupEnvelope.unwrap`, and preview shares `restoreAll`'s exact
   validation gate so preview can never accept a file restore would

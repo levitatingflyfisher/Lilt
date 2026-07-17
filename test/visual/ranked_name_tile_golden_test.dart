@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lilt/app/theme.dart';
 import 'package:lilt/domain/models/name.dart';
 import 'package:lilt/features/results/solo_results_screen.dart'
     show RankedNameTile;
@@ -14,11 +15,9 @@ import 'visual_golden_helper.dart';
 /// progress-bar "score" indicator) — no copy that can drift. It is a plain
 /// StatelessWidget, so no Riverpod/DB is needed.
 void main() {
-  // Mirrors the real app theme (lib/app/app.dart).
-  final theme = ThemeData(
-    colorSchemeSeed: const Color(0xFF8B6F47),
-    useMaterial3: true,
-  );
+  // The real app theme (lib/app/theme.dart) — goldens render the shipped
+  // openhearth_design grammar, not a hand-rolled mirror that can drift.
+  final theme = LiltTheme.light();
 
   // Render two rows: a #1 top-ten name (full bar, bold, primary colour) and a
   // mid-pack name (partial bar, normal weight, secondary colour) so both

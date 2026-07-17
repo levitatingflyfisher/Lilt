@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lilt/app/theme.dart';
 import 'package:lilt/core/providers/database_provider.dart';
 import 'package:lilt/core/providers/settings_providers.dart';
 import 'package:lilt/domain/repositories/names_repository.dart';
@@ -56,11 +57,9 @@ Future<(AppDatabase, ProviderContainer, String)> _seed() async {
 }
 
 void main() {
-  // Mirrors the real app theme (lib/app/app.dart).
-  final theme = ThemeData(
-    colorSchemeSeed: const Color(0xFF8B6F47),
-    useMaterial3: true,
-  );
+  // The real app theme (lib/app/theme.dart) — goldens render the shipped
+  // openhearth_design grammar, not a hand-rolled mirror that can drift.
+  final theme = LiltTheme.light();
 
   late AppDatabase db;
   late ProviderContainer container;
