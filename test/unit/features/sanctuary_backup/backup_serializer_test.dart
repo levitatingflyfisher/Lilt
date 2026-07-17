@@ -5,7 +5,6 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lilt/features/sanctuary_backup/data/backup_serializer.dart';
 import 'package:lilt/services/database/database.dart';
-import 'package:sanctuary_auth_core/sanctuary_auth_core.dart';
 import 'package:sanctuary_backup_ui/sanctuary_backup_ui.dart';
 
 void main() {
@@ -79,6 +78,22 @@ void main() {
       expect(json['app'], equals('lilt'));
       expect(json['schemaVersion'], equals(db.schemaVersion));
       expect(json['exportedAt'], isNotNull);
+    });
+
+    test(
+        'dumpAll stamps createdAt ADDITIVELY — legacy keys survive so the '
+        'old shipped app still restores new backups (wire-compat)', () async {
+      final bytes = await serializer.dumpAll();
+      final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+
+      // The v0.2 retention/preview stamp...
+      expect(json['createdAt'], isNotNull);
+      expect(DateTime.parse(json['createdAt'] as String), isA<DateTime>());
+      // ...added alongside, never instead of, the shipped v0.1 shape.
+      expect(json['app'], equals('lilt'));
+      expect(json['schemaVersion'], equals(db.schemaVersion));
+      expect(json['exportedAt'], isNotNull);
+      expect(json['tables'], isA<Map<String, dynamic>>());
     });
 
     test('dumpAll includes only custom names, never the bundled catalog',
@@ -251,7 +266,7 @@ void main() {
 
       expect(
         () => serializer.restoreAll(bytes),
-        throwsA(isA<BackupFormatException>()),
+        throwsA(isA<FormatException>()),
       );
     });
 
@@ -322,6 +337,109 @@ void main() {
 
       final sessions = await db.select(db.sessions).get();
       expect(sessions, hasLength(1), reason: 'original data must survive');
+    });
+
+    test(
+        'WIRE-COMPAT: a legacy v0.1 blob (no createdAt, no payload key) '
+        'still restores', () async {
+      // Byte-for-byte the shape the shipped Lilt wrote: app + schemaVersion
+      // + exportedAt + top-level tables, nothing else.
+      final legacy = Uint8List.fromList(utf8.encode(jsonEncode({
+        'app': 'lilt',
+        'schemaVersion': 1,
+        'exportedAt': now.toUtc().toIso8601String(),
+        'tables': {
+          'nameEntries': [
+            {
+              'id': 'zephyr-m',
+              'display': 'Zephyr',
+              'gender': 'm',
+              'variants': '[]',
+              'isCustom': true,
+            },
+          ],
+          'sessions': <dynamic>[],
+          'eloMatchRows': <dynamic>[],
+          'shortlistEntries': <dynamic>[],
+        },
+      })));
+
+      await serializer.restoreAll(legacy);
+
+      final names = await db.select(db.nameEntries).get();
+      expect(names.single.id, equals('zephyr-m'));
+      expect(names.single.isCustom, isTrue);
+    });
+  });
+
+  group('PreviewableBackupSerializer', () {
+    test('describeBackup reports counts + metadata for a real dump',
+        () async {
+      await seedData();
+      final bytes = await serializer.dumpAll();
+
+      final manifest = await serializer.describeBackup(bytes);
+
+      expect(manifest.appId, equals('lilt'));
+      expect(manifest.schemaVersion, equals(db.schemaVersion));
+      expect(manifest.createdAt, isNotNull);
+      expect(manifest.tableCounts['nameEntries'], equals(1)); // custom only
+      expect(manifest.tableCounts['sessions'], equals(1));
+      expect(manifest.tableCounts['eloMatchRows'], equals(1));
+      expect(manifest.tableCounts['shortlistEntries'], equals(2));
+    });
+
+    test('describeBackup shares restoreAll\'s gate: rejects a wrong app',
+        () async {
+      final bytes = Uint8List.fromList(utf8.encode(jsonEncode({
+        'app': 'lullaby',
+        'schemaVersion': 1,
+        'tables': <String, dynamic>{},
+      })));
+
+      expect(
+        () => serializer.describeBackup(bytes),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test(
+        'describeBackup shares restoreAll\'s gate: rejects a future schema',
+        () async {
+      final bytes = Uint8List.fromList(utf8.encode(jsonEncode({
+        'app': 'lilt',
+        'schemaVersion': 999,
+        'tables': <String, dynamic>{},
+      })));
+
+      expect(
+        () => serializer.describeBackup(bytes),
+        throwsA(isA<BackupSchemaException>()),
+      );
+    });
+
+    test(
+        'describeBackup shares restoreAll\'s gate: rejects missing tables',
+        () async {
+      final bytes = Uint8List.fromList(utf8.encode(jsonEncode({
+        'app': 'lilt',
+        'schemaVersion': 1,
+      })));
+
+      expect(
+        () => serializer.describeBackup(bytes),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('describeBackup never writes', () async {
+      await seedData();
+      final before = (await db.select(db.nameEntries).get()).length;
+
+      await serializer.describeBackup(await serializer.dumpAll());
+
+      final after = (await db.select(db.nameEntries).get()).length;
+      expect(after, equals(before));
     });
   });
 }

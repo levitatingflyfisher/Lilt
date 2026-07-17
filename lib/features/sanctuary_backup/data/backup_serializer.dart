@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:sanctuary_auth_core/sanctuary_auth_core.dart' show BackupFormatException;
 import 'package:sanctuary_backup_ui/sanctuary_backup_ui.dart';
 
 import '../../../services/database/database.dart';
@@ -10,7 +9,8 @@ import '../../../services/database/database.dart';
 /// backup via sanctuary_backup_ui.
 ///
 /// Implements the package's [BackupSerializer] interface, working directly
-/// with [AppDatabase].
+/// with [AppDatabase], plus [PreviewableBackupSerializer] so
+/// preview-before-restore reflects Lilt's real validation.
 ///
 /// **Scope: custom data only, never the bundled name catalog.** `NameEntries`
 /// mixes two very different things — ~1,636 bundled names loaded once from
@@ -22,7 +22,8 @@ import '../../../services/database/database.dart';
 /// match history, and shortlist entries — the catalog (and any shortlist
 /// entry pointing at it) is left untouched and its FK reference still
 /// resolves (Sanctuary scout gotcha #4).
-class LiltBackupSerializer implements BackupSerializer {
+class LiltBackupSerializer
+    implements BackupSerializer, PreviewableBackupSerializer {
   static const _appId = 'lilt';
 
   final AppDatabase _db;
@@ -31,6 +32,13 @@ class LiltBackupSerializer implements BackupSerializer {
 
   /// Reads custom names, sessions, match history, and shortlist entries and
   /// returns the JSON payload as bytes.
+  ///
+  /// The shape is Lilt's SHIPPED one (`app`/`schemaVersion`/`exportedAt`/
+  /// top-level `tables`) with one ADDITIVE key the v2 retention spec needs
+  /// (`createdAt`). The shipped restorer only reads app + schemaVersion +
+  /// tables and ignores unknown keys, so backups made by this build still
+  /// restore on pre-v2 Lilt installs — the wire format is extended, never
+  /// broken.
   @override
   Future<Uint8List> dumpAll() async {
     final customNames = await (_db.select(_db.nameEntries)
@@ -47,10 +55,12 @@ class LiltBackupSerializer implements BackupSerializer {
         .get();
     final allShortlist = await _db.select(_db.shortlistEntries).get();
 
+    final stamp = DateTime.now().toUtc().toIso8601String();
     final payload = <String, dynamic>{
       'app': _appId,
       'schemaVersion': _db.schemaVersion,
-      'exportedAt': DateTime.now().toUtc().toIso8601String(),
+      'exportedAt': stamp,
+      'createdAt': stamp,
       'tables': {
         'nameEntries': customNames.map((r) => r.toJson()).toList(),
         'sessions': allSessions.map((r) => r.toJson()).toList(),
@@ -62,6 +72,38 @@ class LiltBackupSerializer implements BackupSerializer {
     return Uint8List.fromList(utf8.encode(jsonEncode(payload)));
   }
 
+  /// The dry-run parse behind preview-before-restore and export
+  /// verify-by-read-back: validates exactly like [restoreAll] (wrong app,
+  /// future schema, missing tables) and reports row counts — but never
+  /// writes. The `nameEntries` count is custom names only, matching what a
+  /// restore would actually replace (the bundled catalog is out of scope).
+  @override
+  Future<BackupManifest> describeBackup(Uint8List plaintext) async {
+    _requireTables(_unwrap(plaintext).payload);
+    return BackupEnvelope.describe(plaintext);
+  }
+
+  /// The tables gate [restoreAll] applies — shared so describe and restore
+  /// can never drift apart.
+  static Map<String, dynamic> _requireTables(Map<String, Object?> payload) {
+    final tables = payload['tables'];
+    if (tables is! Map<String, dynamic>) {
+      throw const FormatException('Missing tables in backup payload');
+    }
+    return tables;
+  }
+
+  /// Envelope validation via the shared helper. Every backup Lilt ever
+  /// shipped carries the `app` key, so `requireAppKey` stays at its strict
+  /// default. Throws [FormatException] for a wrong/missing app or missing
+  /// schemaVersion, [BackupSchemaException] for a future schema — checked
+  /// before any transaction opens (SANCTUARY-BRIEF §2.4/§2.8: fail closed).
+  UnwrappedBackup _unwrap(Uint8List data) => BackupEnvelope.unwrap(
+        data,
+        expectedAppId: _appId,
+        currentSchemaVersion: _db.schemaVersion,
+      );
+
   /// Restores custom names, sessions, match history, and shortlist entries
   /// from a JSON [Uint8List] previously created by [dumpAll].
   ///
@@ -69,36 +111,13 @@ class LiltBackupSerializer implements BackupSerializer {
   /// shortlist entries are wiped before inserting. The bundled name catalog
   /// (`isCustom = false`) is never touched.
   ///
-  /// Throws [BackupFormatException] if the payload is from a different app.
-  /// Throws [BackupSchemaException] if the payload's schema version is newer
-  /// than the current database version.
-  /// Throws [FormatException] if the payload is not valid JSON or is missing
-  /// required fields.
+  /// Throws [FormatException] if the payload is from a different app, is not
+  /// valid JSON, or is missing required fields. Throws
+  /// [BackupSchemaException] if the payload's schema version is newer than
+  /// the current database version.
   @override
   Future<void> restoreAll(Uint8List data) async {
-    final json = jsonDecode(utf8.decode(data)) as Map<String, dynamic>;
-
-    // Checked before the transaction opens — a rejected restore must never
-    // touch existing data (SANCTUARY-BRIEF §2.4/§2.8: fail closed).
-    final app = json['app'] as String?;
-    if (app != _appId) {
-      throw BackupFormatException(
-        'This backup is from a different app ("${app ?? 'unknown'}"), not Lilt.',
-      );
-    }
-
-    final version = json['schemaVersion'] as int?;
-    if (version == null) {
-      throw const FormatException('Missing schemaVersion in backup payload');
-    }
-    if (version > _db.schemaVersion) {
-      throw BackupSchemaException(version, _db.schemaVersion);
-    }
-
-    final tables = json['tables'] as Map<String, dynamic>?;
-    if (tables == null) {
-      throw const FormatException('Missing tables in backup payload');
-    }
+    final tables = _requireTables(_unwrap(data).payload);
 
     await _db.transaction(() async {
       // Wipe in reverse FK order. NameEntries is filtered to isCustom=true
