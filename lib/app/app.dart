@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lilt/app/router.dart';
+import 'package:lilt/app/theme.dart';
 import 'package:lilt/core/providers/bootstrap_provider.dart';
 import 'package:sanctuary_backup_ui/sanctuary_backup_ui.dart';
 
@@ -31,10 +32,9 @@ class _LiltAppState extends ConsumerState<LiltApp> {
 
     return MaterialApp.router(
       title: 'Lilt',
-      theme: ThemeData(
-        colorSchemeSeed: const Color(0xFF8B6F47),
-        useMaterial3: true,
-      ),
+      theme: LiltTheme.light(),
+      darkTheme: LiltTheme.dark(),
+      themeMode: ThemeMode.system,
       routerConfig: router,
       builder: (context, child) {
         final resolved = bootstrap.when(
