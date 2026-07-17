@@ -39,7 +39,6 @@ dependencies:
 
   # Sharing + export
   share_plus: ^10.0.0
-  pdf: ^3.11.0
   file_picker: ^8.0.0
 
   # Settings persistence
