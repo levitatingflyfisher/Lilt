@@ -1,0 +1,5 @@
+{
+  "main_dart_js_gz_max_bytes": 1046888,
+  "apk_arm64_max_bytes": 20730031,
+  "note": "Baselines measured 2026-07-17 from the on-disk artifacts: build/web/main.dart.js (997036 bytes gzipped via gzip -c | wc -c) and build/app/outputs/flutter-apk/app-arm64-v8a-release.apk (19742886 bytes), each +5% rounded up."
+}

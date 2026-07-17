@@ -56,6 +56,10 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # Fleet standards as tests that can fail (sibling path dep):
+  # test/fleet_conformance_test.dart runs the whole suite.
+  oh_fleet_conformance:
+    path: ../packages/oh_fleet_conformance
   flutter_lints: ^6.0.0
   build_runner: ^2.4.15
   drift_dev: ^2.25.0
