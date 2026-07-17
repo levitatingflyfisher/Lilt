@@ -2,12 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lilt/app/router.dart';
 import 'package:lilt/core/providers/bootstrap_provider.dart';
+import 'package:sanctuary_backup_ui/sanctuary_backup_ui.dart';
 
-class LiltApp extends ConsumerWidget {
+class LiltApp extends ConsumerStatefulWidget {
   const LiltApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LiltApp> createState() => _LiltAppState();
+}
+
+class _LiltAppState extends ConsumerState<LiltApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Silent freshness snapshot (BACKUP_RETENTION_SPEC §3): if the newest
+    // vault snapshot is >7 days old and a key exists, take one. Post-frame
+    // + fire-and-forget — never blocks boot, never surfaces errors (the
+    // Sundial/Lullaby app-bootstrap pattern).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(backupControllerProvider.notifier).runStartupMaintenance();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bootstrap = ref.watch(bootstrapProvider);
     final router = ref.watch(routerProvider);
 
