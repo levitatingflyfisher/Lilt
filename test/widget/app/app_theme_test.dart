@@ -18,6 +18,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// app.dart as a bare colorSchemeSeed.
 const Color _liltTaupe = Color(0xFF8B6F47);
 
+/// The dark-tuned taupe (same hue, lightened to clear WCAG AA on the
+/// hearth-dark surfaces — see theme_contrast_test.dart).
+const Color _liltTaupeDark = Color(0xFFC9A876);
+
 /// Pumps the real [LiltApp] with the same provider overrides as the startup
 /// maintenance test (bootstrap short-circuited; everything backup-related
 /// faked) and returns the [MaterialApp] it builds.
@@ -87,9 +91,10 @@ void main() {
     expect(dark.colorScheme.surface, OhColors.darkSurfaceCard,
         reason: 'dark theme must carry the hearth-dark card surface');
 
-    // Lilt's signature accent survives grammar adoption in both themes.
+    // Lilt's signature accent survives grammar adoption in both themes —
+    // light keeps the v1 taupe, dark carries the AA-tuned variant of it.
     expect(light.colorScheme.primary, _liltTaupe);
-    expect(dark.colorScheme.primary, _liltTaupe);
+    expect(dark.colorScheme.primary, _liltTaupeDark);
 
     // The grammar's faces, not the stock Material ladder.
     expect(light.textTheme.displayLarge!.fontFamily, 'Lora');

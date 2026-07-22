@@ -4,6 +4,14 @@ All notable changes to Lilt will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Dark-mode readability: dark mode now carries a dark-tuned taupe accent
+  (`#C9A876` — the same hue, lightened). Reusing the light accent left
+  filled-button labels at 3.6:1 and accent text on the brown-black card
+  surfaces at 3.6:1, below WCAG AA (4.5:1); both pairings now sit at
+  ~7.5:1, verified by a computed-contrast test. Light mode keeps the
+  original v1 taupe.
+
 ### Added
 - Dark mode. Lilt adopts the shared OpenHearth design grammar
   (`openhearth_design`): `OhTheme.light` on warm linen by day and
