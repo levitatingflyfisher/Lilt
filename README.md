@@ -84,4 +84,5 @@ Android APK and a PWA.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). The bundled Lora and Nunito font families are
+licensed separately under the [SIL Open Font License 1.1](assets/fonts/OFL.txt).

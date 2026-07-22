@@ -13,6 +13,10 @@ All notable changes to Lilt will be documented in this file.
   original v1 taupe.
 
 ### Added
+- `assets/fonts/OFL.txt`: the SIL Open Font License 1.1 text with the
+  Lora and Nunito copyright notices (taken from the fonts' own
+  metadata) now ships alongside the bundled faces, as the OFL requires;
+  referenced from the README's License section.
 - Dark mode. Lilt adopts the shared OpenHearth design grammar
   (`openhearth_design`): `OhTheme.light` on warm linen by day and
   `OhTheme.hearthDark`'s brown-black surfaces after sundown, following
