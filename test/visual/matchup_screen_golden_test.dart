@@ -30,16 +30,31 @@ Future<(AppDatabase, ProviderContainer, String)> _seed() async {
 
   await db.namesDao.insertNames([
     NameEntriesCompanion.insert(
-        id: 'a-m', display: 'Alexander', gender: 'm', variants: '[]'),
+      id: 'a-m',
+      display: 'Alexander',
+      gender: 'm',
+      variants: '[]',
+    ),
     NameEntriesCompanion.insert(
-        id: 'b-m', display: 'Benjamin', gender: 'm', variants: '[]'),
+      id: 'b-m',
+      display: 'Benjamin',
+      gender: 'm',
+      variants: '[]',
+    ),
     NameEntriesCompanion.insert(
-        id: 'c-m', display: 'Charlie', gender: 'm', variants: '[]'),
+      id: 'c-m',
+      display: 'Charlie',
+      gender: 'm',
+      variants: '[]',
+    ),
   ]);
 
   final namesRepo = NamesRepository(db.namesDao);
-  final sessionRepo =
-      SessionRepository(db.sessionDao, db.eloMatchesDao, namesRepo);
+  final sessionRepo = SessionRepository(
+    db.sessionDao,
+    db.eloMatchesDao,
+    namesRepo,
+  );
   final session = await sessionRepo.createSession(
     poolIds: ['a-m', 'b-m', 'c-m'],
     genderFilter: 'm',
@@ -49,17 +64,26 @@ Future<(AppDatabase, ProviderContainer, String)> _seed() async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
 
-  final container = ProviderContainer(overrides: [
-    databaseProvider.overrideWithValue(db),
-    sharedPreferencesProvider.overrideWithValue(prefs),
-  ]);
+  final container = ProviderContainer(
+    overrides: [
+      databaseProvider.overrideWithValue(db),
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
   return (db, container, session.id);
 }
 
 void main() {
-  // The real app theme (lib/app/theme.dart) — goldens render the shipped
+  // The real app themes (lib/app/theme.dart) — goldens render the shipped
   // openhearth_design grammar, not a hand-rolled mirror that can drift.
-  final theme = LiltTheme.light();
+  // Both brightnesses are swept: dark mode ships to users too, and its
+  // AA-tuned accent (LiltTheme.accentDark) has its own legibility story
+  // the light goldens cannot vouch for. The light variant keeps the
+  // original unsuffixed golden names.
+  final themes = <String, ThemeData Function()>{
+    'light': LiltTheme.light,
+    'dark': LiltTheme.dark,
+  };
 
   late AppDatabase db;
   late ProviderContainer container;
@@ -77,21 +101,25 @@ void main() {
     await db.close();
   });
 
-  testWidgets('MatchupScreen renders across sizes and text scales',
+  for (final MapEntry<String, ThemeData Function()> entry in themes.entries) {
+    testWidgets(
+      'MatchupScreen renders across sizes and text scales (${entry.key})',
       (tester) async {
-    await goldenAtSizes(
-      tester,
-      name: 'matchup_screen',
-      home: UncontrolledProviderScope(
-        container: container,
-        child: MatchupScreen(sessionId: sessionId),
-      ),
-      sizes: const <String, Size>{
-        'phone': Size(360, 800),
-        'narrow': Size(320, 800),
+        await goldenAtSizes(
+          tester,
+          name: entry.key == 'light' ? 'matchup_screen' : 'matchup_screen_dark',
+          home: UncontrolledProviderScope(
+            container: container,
+            child: MatchupScreen(sessionId: sessionId),
+          ),
+          sizes: const <String, Size>{
+            'phone': Size(360, 800),
+            'narrow': Size(320, 800),
+          },
+          textScales: const <double>[1.0, 3.0],
+          theme: entry.value(),
+        );
       },
-      textScales: const <double>[1.0, 3.0],
-      theme: theme,
     );
-  });
+  }
 }
