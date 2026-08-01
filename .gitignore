@@ -53,3 +53,8 @@ docs/superpowers/
 /docs/superpowers/
 test/visual/failures/
 .claude/
+
+# Generated sources — CI and every local build run build_runner, so a
+# committed copy is only a copy that can go stale:
+# `dart run build_runner build --delete-conflicting-outputs`
+*.g.dart

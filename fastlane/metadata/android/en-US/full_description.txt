@@ -1,0 +1,13 @@
+Turn "argue over a list" into a game of this or that.
+
+Lilt ranks names by rapid pairwise choice. For two people it reveals where you already agree — but only once you have both done the work, so nobody is anchored by the other's answers.
+
+• Fast pairwise ranking — one tap per choice
+• A peeking lock, so you cannot see their list before you have made your own
+• Mutual-match reveal: the names you BOTH ranked high
+• A real ranking engine underneath, not a running tally
+
+No accounts, no cloud, no ads. The APK asks for no network permission at all.
+
+Free and open source, MIT licensed.
+Source: https://github.com/levitatingflyfisher/Lilt
