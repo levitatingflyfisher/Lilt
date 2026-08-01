@@ -7,7 +7,13 @@ void main() => runFleetConformance(const FleetAppConfig(
       // Bundles its own type, so nothing falls back to a web font — a
       // character the bundled families cannot draw is a box on a
       // real phone. C7 sweeps lib/ for any.
-      checks: FleetAppConfig.withBundledFonts,
+      // C8: full OhTheme adoption means the ambient iconTheme really is
+      // wired up, so a bare IconButton.filled really would go invisible.
+      // Filled icon buttons must come from OhIconButton.
+      checks: {
+        ...FleetAppConfig.withBundledFonts,
+        FleetCheck.c8IconButtons,
+      },
       styleTier: StyleTier.full,
       androidPermissions: {},
       // C4 v2 — the release MERGED surface: source permissions plus
