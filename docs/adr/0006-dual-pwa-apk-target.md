@@ -19,8 +19,9 @@ Ship **both**, from one codebase, with a conditional database connection:
   (`NativeDatabase.createInBackground` on a file in the app documents dir) or
   **`web.dart`** (`WasmDatabase` running off the main thread).
 - The web build bundles `sqlite3.wasm` and `drift_worker.js` (checked into `web/`).
-- On desktop-width viewports the app clamps its content to a **760px** centered column so
-  the phone-shaped UI stays usable in a browser window.
+- On desktop-width viewports each screen caps its content at **640px**, centered, with
+  `OhPage` from `openhearth_design` (it replaced an app-wide 760px clamp in 2026-09, so app
+  bars and backgrounds now span the window while the phone-shaped content does not).
 - The web build requests **persistent storage** so PWA data survives browser eviction.
 - Release is automated: a tagged push (`v*.*.*`) triggers GitHub Actions to run tests,
   then build **split-per-ABI APKs** and an **AAB**, with SHA-256 checksums, as a draft
@@ -32,7 +33,7 @@ Ship **both**, from one codebase, with a conditional database connection:
   schema on both; a zero-install way to try Lilt.
 - **Costs:** the web target constrains the data layer to what compiles to WASM (no
   `dart:io` assumptions); the WASM assets must be kept in sync with the Drift version; some
-  responsive/layout care (the 760px clamp, golden tests) that a phone-only app could skip.
+  responsive/layout care (the per-screen width cap, golden tests) that a phone-only app could skip.
 - **Forecloses:** using any plugin or API that is native-only without a web fallback in
   the conditional layer.
 

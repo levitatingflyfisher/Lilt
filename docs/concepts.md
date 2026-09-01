@@ -34,7 +34,8 @@ the ranking pool exactly like any bundled one.
 A **NameSession** is one person's ranking run. It records the **pool** (`poolIds` — the
 specific names being ranked), the filters that produced it (`genderFilter`, `poolSize`),
 and lifecycle flags (`isComplete`, `resultsLocked`, timestamps). A `participantLabel`
-distinguishes couple runs: `"Partner A"`, `"Partner B"`, or `null` for solo.
+distinguishes couple runs: `"Partner A"`, `"Partner B"`, or `null` for solo, and
+`partnerSessionId` links the two halves of a couple (set on both at hand-off).
 
 Setting up a pool (the **pool config** screen) means: pick a gender filter, pick a size
 (Quick 30 / Standard 60 / Comprehensive 120 / Custom 10–200), optionally add custom names,
@@ -88,7 +89,9 @@ distinct dimensions (matrix factorization), or when there are genuine **preferen
 
 Two people rank the **same pool** on one device. Partner A finishes (session locked),
 hands the phone over, and Partner B is launched into A's exact pool without seeing A's
-result — see [ADR-0004](adr/0004-peeking-prevention.md).
+result — see [ADR-0004](adr/0004-peeking-prevention.md). The pairing is persisted on both
+sessions at that moment, so Home, a resumed Partner B, and the results guards read it
+rather than inferring it from a URL or from timestamps.
 
 Once both are complete and locked, the **Matches** screen shows each partner's top 20 side
 by side and, in the middle, the names that appear in *both* top-20 lists. That overlap is

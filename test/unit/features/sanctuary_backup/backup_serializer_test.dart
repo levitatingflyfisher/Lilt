@@ -151,6 +151,46 @@ void main() {
       expect(sessions.single.resultsLocked, isFalse);
     });
 
+    test('restoreAll round-trips the persisted couple pairing', () async {
+      for (final (id, partner) in [('pa', 'pb'), ('pb', 'pa')]) {
+        await db.into(db.sessions).insert(SessionsCompanion.insert(
+              id: id,
+              poolIds: '[]',
+              genderFilter: 'all',
+              poolSize: 0,
+              partnerSessionId: Value(partner),
+              createdAt: now,
+            ));
+      }
+      final bytes = await serializer.dumpAll();
+
+      await serializer.restoreAll(bytes);
+
+      final sessions = await db.select(db.sessions).get();
+      expect({for (final s in sessions) s.id: s.partnerSessionId},
+          {'pa': 'pb', 'pb': 'pa'});
+    });
+
+    test('restoreAll keeps cleared sessions cleared', () async {
+      final cleared = DateTime.utc(2026, 9, 27, 12);
+      await db.into(db.sessions).insert(SessionsCompanion.insert(
+            id: 'gone',
+            poolIds: '[]',
+            genderFilter: 'all',
+            poolSize: 0,
+            createdAt: now,
+            deletedAt: Value(cleared),
+          ));
+      final bytes = await serializer.dumpAll();
+
+      await serializer.restoreAll(bytes);
+
+      final row = (await db.select(db.sessions).get()).single;
+      expect(row.deletedAt?.toUtc(), cleared,
+          reason: 'a restore must not resurrect a session the person '
+              'cleared; it stays in Recently cleared');
+    });
+
     test('restoreAll round-trips match history', () async {
       await seedData();
       final bytes = await serializer.dumpAll();

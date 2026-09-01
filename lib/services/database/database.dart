@@ -22,10 +22,25 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) async => m.createAll(),
+        // SQLite enforces the declared links (matches -> sessions ON DELETE
+        // CASCADE, shortlist -> names) only when asked, per connection.
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
+        onUpgrade: (m, from, to) async {
+          // v2: persisted couple pairing (was a URL parameter + a guess).
+          if (from < 2) {
+            await m.addColumn(sessions, sessions.partnerSessionId);
+          }
+          // v3: soft delete for Clear all sessions.
+          if (from < 3) {
+            await m.addColumn(sessions, sessions.deletedAt);
+          }
+        },
       );
 }

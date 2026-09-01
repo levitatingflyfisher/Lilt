@@ -10,6 +10,36 @@ import 'package:lilt/features/results/couple_results_screen.dart';
 import 'package:lilt/features/results/solo_results_screen.dart';
 import 'package:lilt/features/settings/settings_screen.dart';
 import 'package:lilt/features/shortlist/shortlist_screen.dart';
+import 'package:openhearth_design/openhearth_design.dart';
+
+/// Hands the phone from Partner A to Partner B. Everything above Home is
+/// popped first, so nothing of A's (ranking or results) sits in the back
+/// stack beneath B's matchup: a redirect guards a route when it is pushed,
+/// never when it is popped back to.
+void handOffToPartner(BuildContext context, String partnerASessionId) {
+  final router = GoRouter.of(context);
+  while (router.canPop()) {
+    router.pop();
+  }
+  router.push('/pool-config?partnerB=1&partnerA=$partnerASessionId');
+}
+
+/// Peeking prevention for one partner's own results: a locked session that
+/// belongs to a couple opens only once BOTH partners have finished.
+Future<String?> _soloResultsGuard(
+    BuildContext context, GoRouterState state) async {
+  final id = state.pathParameters['sessionId'];
+  if (id == null) return '/';
+  final repo = ProviderScope.containerOf(context).read(sessionRepositoryProvider);
+  final session = await repo.getSession(id);
+  final partnerId = session?.partnerSessionId;
+  if (session == null || partnerId == null || !session.resultsLocked) {
+    return null;
+  }
+  final partner = await repo.getSession(partnerId);
+  if (partner == null) return null; // partner deleted: nobody left to peek
+  return session.isComplete && partner.isComplete ? null : '/';
+}
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -41,6 +71,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/results/solo/:sessionId',
+        redirect: _soloResultsGuard,
         builder: (context, state) => SoloResultsScreen(
           sessionId: state.pathParameters['sessionId']!,
         ),
@@ -87,7 +118,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      body: Center(child: Text('Route not found: ${state.uri}')),
+      appBar: AppBar(),
+      body: OhErrorState(
+        title: 'This page isn’t here',
+        message: 'The link may be out of date. Your names and sessions '
+            'are safe.',
+        error: state.error,
+        icon: Icons.explore_off_outlined,
+        retryLabel: 'Back to your sessions',
+        onRetry: () => context.go('/'),
+      ),
     ),
   );
 });

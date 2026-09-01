@@ -4,6 +4,29 @@ All notable changes to Lilt will be documented in this file.
 
 ## [Unreleased]
 
+### Changed (fleet rollout, 2026-09)
+- Adopts openhearth_design 0.7.2, sanctuary_backup_ui 0.3.0 and
+  oh_fleet_conformance 0.8.1. Lora and Nunito now come from the design package;
+  the app's own font files and OFL copy are gone.
+- Failures are a plain sentence with a way out (`OhErrorState`), never the raw
+  exception; an unknown name or page offers "Back to your sessions".
+- **Clear all sessions** (was Clear Completed Sessions) clears finished and
+  in-progress sessions at once, with an Undo that never times out and a Recently
+  cleared list (Restore, Delete forever). Schema v3 adds `sessions.deleted_at`.
+  Removing a shortlisted name offers Undo. End pairing asks through the shared confirm.
+- Theme is light, dark or follow the phone (default), from the app bar on every
+  screen but Matchup and the veto pass. Each screen caps its content at 640px on wide
+  windows instead of the app-wide 760px clamp.
+- Every app-bar command shows a word as well as an icon; Settings moved from Home's
+  bar into the Home body. Home shows a dismissible "Backup isn't set up" line.
+- On web, recovery words are stored under Lilt's own keys (fleet PWAs share an origin).
+- Ranking bars use a fixed scale (chance of beating an average name in the pool) in
+  one colour; Matches prints both partners' ranks for every match.
+- Copy uses real apostrophes and quotes and no spaced em dashes; the done screen no
+  longer promises "keep refining". The PWA manifest and page carry Lilt's name,
+  description and colours.
+- Only the session repository imports `elo_engine`; screens read domain models.
+
 ### Fixed
 - Dark-mode readability: dark mode now carries a dark-tuned taupe accent
   (`#C9A876` — the same hue, lightened). Reusing the light accent left

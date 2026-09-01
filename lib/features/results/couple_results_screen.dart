@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lilt/core/providers/repository_providers.dart';
 import 'package:lilt/domain/models/name.dart';
 import 'package:lilt/domain/models/name_session.dart';
+import 'package:openhearth_design/openhearth_design.dart';
+import 'package:lilt/app/theme_toggle.dart';
 
 final _coupleResultsProvider = FutureProvider.family<_CoupleData,
     ({String sessionAId, String sessionBId})>((ref, ids) async {
@@ -15,18 +18,18 @@ final _coupleResultsProvider = FutureProvider.family<_CoupleData,
     throw StateError('Session(s) not found');
   }
 
-  final engineA = await sessionRepo.buildEngine(ids.sessionAId);
-  final engineB = await sessionRepo.buildEngine(ids.sessionBId);
+  final rankingA = await sessionRepo.ranking(ids.sessionAId);
+  final rankingB = await sessionRepo.ranking(ids.sessionBId);
 
   final allIds = {...sessionA.poolIds, ...sessionB.poolIds}.toList();
   final names = await namesRepo.getByIds(allIds);
   final nameMap = {for (final n in names) n.id: n};
 
-  final rankingsA = engineA.rankings
+  final rankingsA = rankingA.ranked
       .map((i) => nameMap[i.id])
       .whereType<Name>()
       .toList();
-  final rankingsB = engineB.rankings
+  final rankingsB = rankingB.ranked
       .map((i) => nameMap[i.id])
       .whereType<Name>()
       .toList();
@@ -103,11 +106,25 @@ class CoupleResultsScreen extends ConsumerWidget {
     final data = ref.watch(_coupleResultsProvider(ids));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Matches')),
-      body: data.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (d) => _CoupleResultsBody(data: d),
+      appBar: AppBar(
+        title: const Text('Matches'),
+        actions: const [OhBarActions(children: [LiltThemeToggle()])],
+      ),
+      body: OhPage(
+        padding: EdgeInsets.zero,
+        child: data.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => OhErrorState.fromError(e,
+              stackTrace: st,
+              title: 'Couldn’t load your matches',
+              icon: Icons.error_outline,
+              onRetry: () => ref.invalidate(_coupleResultsProvider(ids))),
+          data: (d) => _CoupleResultsBody(
+            data: d,
+            onOpenName: (nameId) =>
+                context.push('/name/$nameId?a=$sessionAId&b=$sessionBId'),
+          ),
+        ),
       ),
     );
   }
@@ -115,7 +132,8 @@ class CoupleResultsScreen extends ConsumerWidget {
 
 class _CoupleResultsBody extends StatelessWidget {
   final _CoupleData data;
-  const _CoupleResultsBody({required this.data});
+  final ValueChanged<String> onOpenName;
+  const _CoupleResultsBody({required this.data, required this.onOpenName});
 
   @override
   Widget build(BuildContext context) {
@@ -127,11 +145,13 @@ class _CoupleResultsBody extends StatelessWidget {
             label: data.sessionA.participantLabel ?? 'Partner A',
             names: data.rankingsA,
             highlightIds: data.matches.map((m) => m.name.id).toSet(),
+            onOpenName: onOpenName,
           ),
         ),
         SizedBox(
           width: 120,
-          child: _MatchesColumn(matches: data.matches),
+          child: _MatchesColumn(
+              matches: data.matches, onOpenName: onOpenName),
         ),
         Expanded(
           child: _RankColumn(
@@ -139,6 +159,7 @@ class _CoupleResultsBody extends StatelessWidget {
             names: data.rankingsB,
             highlightIds: data.matches.map((m) => m.name.id).toSet(),
             alignRight: true,
+            onOpenName: onOpenName,
           ),
         ),
       ],
@@ -151,11 +172,13 @@ class _RankColumn extends StatelessWidget {
   final List<Name> names;
   final Set<String> highlightIds;
   final bool alignRight;
+  final ValueChanged<String> onOpenName;
 
   const _RankColumn({
     required this.label,
     required this.names,
     required this.highlightIds,
+    required this.onOpenName,
     this.alignRight = false,
   });
 
@@ -176,18 +199,33 @@ class _RankColumn extends StatelessWidget {
             itemBuilder: (_, i) {
               final name = names[i];
               final isMatch = highlightIds.contains(name.id);
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+              final theme = Theme.of(context);
+              // The rank is printed, not implied by position alone
+              // (dashboard-design-03).
+              final rank = Text(
+                '${i + 1}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              );
+              final label = Expanded(
                 child: Text(
                   name.display,
                   textAlign: alignRight ? TextAlign.right : TextAlign.left,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight:
-                            isMatch ? FontWeight.w600 : FontWeight.normal,
-                        color: isMatch
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
-                      ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: isMatch ? FontWeight.w600 : FontWeight.normal,
+                    color: isMatch ? theme.colorScheme.primary : null,
+                  ),
+                ),
+              );
+              return _NameRow(
+                onTap: () => onOpenName(name.id),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: alignRight
+                      ? [label, const SizedBox(width: 6), rank]
+                      : [rank, const SizedBox(width: 6), label],
                 ),
               );
             },
@@ -200,13 +238,15 @@ class _RankColumn extends StatelessWidget {
 
 class _MatchesColumn extends StatelessWidget {
   final List<_MatchEntry> matches;
-  const _MatchesColumn({required this.matches});
+  final ValueChanged<String> onOpenName;
+  const _MatchesColumn({required this.matches, required this.onOpenName});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Column(
+      key: const Key('matches-column'),
       children: [
         Padding(
           padding: const EdgeInsets.all(8),
@@ -227,19 +267,29 @@ class _MatchesColumn extends StatelessWidget {
               itemCount: matches.length,
               itemBuilder: (_, i) {
                 final m = matches[i];
-                final bothTop5 = m.rankA < 5 && m.rankB < 5;
-                final color = bothTop5
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.secondary;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Text(
-                    m.name.display,
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+                // One colour for every match: the rank pair under the
+                // name says how high each partner put it, which a second
+                // brown with no key never did (visual-display-07).
+                return _NameRow(
+                  onTap: () => onOpenName(m.name.id),
+                  child: Column(
+                    children: [
+                      Text(
+                        m.name.display,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      Text(
+                        'A ${m.rankA + 1} · B ${m.rankB + 1}',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -248,4 +298,22 @@ class _MatchesColumn extends StatelessWidget {
       ],
     );
   }
+}
+
+/// A tappable name row that opens Name Detail. Vertical padding brings each
+/// row to ~36dp, clearing the WCAG 2.2 AA 24px target floor with room,
+/// without redesigning the three-column layout.
+class _NameRow extends StatelessWidget {
+  final VoidCallback onTap;
+  final Widget child;
+  const _NameRow({required this.onTap, required this.child});
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: child,
+        ),
+      );
 }

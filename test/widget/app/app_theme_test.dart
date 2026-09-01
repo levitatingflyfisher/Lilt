@@ -25,8 +25,9 @@ const Color _liltTaupeDark = Color(0xFFC9A876);
 /// Pumps the real [LiltApp] with the same provider overrides as the startup
 /// maintenance test (bootstrap short-circuited; everything backup-related
 /// faked) and returns the [MaterialApp] it builds.
-Future<MaterialApp> _pumpApp(WidgetTester tester) async {
-  SharedPreferences.setMockInitialValues({});
+Future<MaterialApp> _pumpApp(WidgetTester tester,
+    {Map<String, Object> stored = const {}}) async {
+  SharedPreferences.setMockInitialValues(stored);
   final prefs = await SharedPreferences.getInstance();
 
   final db = AppDatabase.forTesting(NativeDatabase.memory());
@@ -50,6 +51,8 @@ Future<MaterialApp> _pumpApp(WidgetTester tester) async {
         ),
         backupSerializerProvider.overrideWith((ref) => LiltBackupSerializer(db)),
         vaultStoreProvider.overrideWithValue(InMemoryVaultStore()),
+        backupReminderStoreProvider
+            .overrideWithValue(InMemoryBackupReminderStore()),
       ],
       child: const LiltApp(),
     ),
@@ -97,8 +100,15 @@ void main() {
     expect(dark.colorScheme.primary, _liltTaupeDark);
 
     // The grammar's faces, not the stock Material ladder.
-    expect(light.textTheme.displayLarge!.fontFamily, 'Lora');
-    expect(light.textTheme.bodyMedium!.fontFamily, 'Nunito');
-    expect(dark.textTheme.displayLarge!.fontFamily, 'Lora');
+    expect(light.textTheme.displayLarge!.fontFamily, 'packages/openhearth_design/Lora');
+    expect(light.textTheme.bodyMedium!.fontFamily, 'packages/openhearth_design/Nunito');
+    expect(dark.textTheme.displayLarge!.fontFamily, 'packages/openhearth_design/Lora');
+  });
+
+  testWidgets('a stored theme choice drives the app theme mode',
+      (tester) async {
+    final app =
+        await _pumpApp(tester, stored: {themePreferenceKey: 'dark'});
+    expect(app.themeMode, ThemeMode.dark);
   });
 }

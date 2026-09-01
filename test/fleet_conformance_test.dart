@@ -13,6 +13,26 @@ void main() => runFleetConformance(const FleetAppConfig(
       checks: {
         ...FleetAppConfig.withBundledFonts,
         FleetCheck.c8IconButtons,
+        // C10: no raw exception text on screen; failures use OhErrorState.
+        FleetCheck.c10RawErrors,
+        // C11: every app-bar action has a name; Lilt's all show one.
+        FleetCheck.c11IconLabels,
+        // C9: every GoRoute has a way in (Name Detail once had none).
+        FleetCheck.c9Routes,
+        // C12: the accent is not the error red (CIEDE2000 >= 12).
+        FleetCheck.c12AccentVsError,
+        // C5: the primary-action screens are swept at 360dp x 1.3 and
+        // 320dp x 3.0 in test/a11y/primary_action_sweep_test.dart.
+        FleetCheck.c5PrimaryScreens,
+      },
+      primaryActionScreens: {
+        'HomeScreen',
+        'PoolConfigScreen',
+        'MatchupScreen',
+        'SoloResultsScreen',
+        'CoupleResultsScreen',
+        'NameDetailScreen',
+        'SettingsScreen',
       },
       styleTier: StyleTier.full,
       androidPermissions: {},

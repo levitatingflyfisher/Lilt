@@ -56,6 +56,7 @@ your partner in 10 minutes" walkthrough. If you write one, put it in `docs/tutor
 - **[Vision](../VISION.md)** — the one idea, the invariants, the honest scorecard.
 - **[Architecture overview](architecture/OVERVIEW.md)** — the spine + diagrams.
 - **[Architecture Decision Records](adr/)** — why each load-bearing choice was made.
+- **[Personas](explanation/personas.md)**: who agents play when they test the UI, with scenarios.
 - **[Concepts](concepts.md)** — names, sessions, matches, convergence, the couple flow,
   and why pairwise comparison beats a star rating.
 - **[Privacy model](privacy-model.md)** — what leaves the device (almost nothing) and

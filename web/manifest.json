@@ -1,11 +1,11 @@
 {
-    "name": "lilt",
-    "short_name": "lilt",
+    "name": "Lilt",
+    "short_name": "Lilt",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FBF8F4",
+    "theme_color": "#8B6F47",
+    "description": "Rank baby names two at a time, alone or as a couple, and see where you agree. Private, offline, no account.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

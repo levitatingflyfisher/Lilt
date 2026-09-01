@@ -33,7 +33,7 @@ way:
 - A **plain-text Share**: solo results (top 10 names) or your shortlist (names + notes),
   sent wherever you choose via the OS share sheet. There is **no** PDF export today (the
   `pdf` dependency is unused — see [limitations](limitations.md)).
-- An **encrypted backup**: Settings → Encrypted Backup → Export produces a ChaCha20-
+- An **encrypted backup**: Settings → Backup → Export produces a ChaCha20-
   Poly1305-encrypted `.ohbk` file (custom names, sessions, comparisons, and shortlist —
   never the bundled name catalog), handed to the same OS share sheet. Without the
   12-word recovery phrase it's opaque ciphertext. See

@@ -84,7 +84,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final button = tester.widget<OutlinedButton>(
-        find.widgetWithText(OutlinedButton, "Don't care"),
+        find.widgetWithText(OutlinedButton, 'Don’t care'),
       );
       final fg = button.style!.foregroundColor!.resolve(<WidgetState>{});
       expect(

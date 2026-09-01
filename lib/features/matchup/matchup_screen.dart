@@ -1,10 +1,12 @@
-import 'package:elo_engine/elo_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lilt/app/router.dart' show handOffToPartner;
 import 'package:lilt/core/providers/repository_providers.dart';
+import 'package:lilt/domain/models/ranking.dart';
 import 'package:lilt/features/home/home_screen.dart';
 import 'matchup_notifier.dart';
+import 'package:openhearth_design/openhearth_design.dart';
 
 class MatchupScreen extends ConsumerWidget {
   final String sessionId;
@@ -23,11 +25,11 @@ class MatchupScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lilt'),
-        actions: [
+        actions: [OhBarActions(children: [
           state.when(
-            data: (s) => IconButton(
-              icon: const Icon(Icons.undo),
-              tooltip: 'Undo',
+            data: (s) => OhBarAction(
+              icon: Icons.undo,
+              label: 'Undo',
               onPressed: s.matchCount > 0
                   ? () =>
                       ref.read(matchupProvider(sessionId).notifier).undo()
@@ -36,15 +38,24 @@ class MatchupScreen extends ConsumerWidget {
             loading: () => const SizedBox.shrink(),
             error: (_, _) => const SizedBox.shrink(),
           ),
-        ],
+        ])],
       ),
-      body: state.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (s) => _MatchupBody(
-          sessionId: sessionId,
-          state: s,
-          partnerASessionId: partnerASessionId,
+      body: OhPage(
+        padding: EdgeInsets.zero,
+        child: state.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, st) => OhErrorState.fromError(e,
+              stackTrace: st,
+              title: 'Couldn’t load this session',
+              message: 'Your comparisons so far are saved. Try again, or go '
+                  'back and reopen the session.',
+              icon: Icons.error_outline,
+              onRetry: () => ref.invalidate(matchupProvider(sessionId))),
+          data: (s) => _MatchupBody(
+            sessionId: sessionId,
+            state: s,
+            partnerASessionId: partnerASessionId,
+          ),
         ),
       ),
     );
@@ -69,19 +80,19 @@ class _MatchupBody extends ConsumerWidget {
     return id.substring(0, lastDash);
   }
 
-  void _record(WidgetRef ref, MatchOutcome outcome) {
-    final proposal = state.nextMatch;
-    if (proposal == null) return;
+  void _record(WidgetRef ref, ComparisonOutcome outcome) {
+    final pair = state.next;
+    if (pair == null) return;
     ref.read(matchupProvider(sessionId).notifier).record(
-          proposal.itemA.id,
-          proposal.itemB.id,
+          pair.firstId,
+          pair.secondId,
           outcome,
         );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final proposal = state.nextMatch;
+    final proposal = state.next;
 
     if (proposal == null || state.isConverged) {
       return _ConvergedView(
@@ -102,9 +113,9 @@ class _MatchupBody extends ConsumerWidget {
                 onHorizontalDragEnd: (details) {
                   if (details.primaryVelocity == null) return;
                   if (details.primaryVelocity! < -300) {
-                    _record(ref, MatchOutcome.bWins);
+                    _record(ref, ComparisonOutcome.bWins);
                   } else if (details.primaryVelocity! > 300) {
-                    _record(ref, MatchOutcome.aWins);
+                    _record(ref, ComparisonOutcome.aWins);
                   }
                 },
                 child: Padding(
@@ -115,17 +126,19 @@ class _MatchupBody extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _NameCard(
-                          display: state.idToDisplay[proposal.itemA.id] ??
-                              _fallbackDisplay(proposal.itemA.id),
-                          onTap: () => _record(ref, MatchOutcome.aWins),
+                          key: const Key('name-card-a'),
+                          display: state.idToDisplay[proposal.firstId] ??
+                              _fallbackDisplay(proposal.firstId),
+                          onTap: () => _record(ref, ComparisonOutcome.aWins),
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
                         child: _NameCard(
-                          display: state.idToDisplay[proposal.itemB.id] ??
-                              _fallbackDisplay(proposal.itemB.id),
-                          onTap: () => _record(ref, MatchOutcome.bWins),
+                          key: const Key('name-card-b'),
+                          display: state.idToDisplay[proposal.secondId] ??
+                              _fallbackDisplay(proposal.secondId),
+                          onTap: () => _record(ref, ComparisonOutcome.bWins),
                         ),
                       ),
                     ],
@@ -146,11 +159,11 @@ class _MatchupBody extends ConsumerWidget {
                 runSpacing: 8,
                 children: [
                   OutlinedButton(
-                    onPressed: () => _record(ref, MatchOutcome.tie),
+                    onPressed: () => _record(ref, ComparisonOutcome.tie),
                     child: const Text('Tie'),
                   ),
                   OutlinedButton(
-                    onPressed: () => _record(ref, MatchOutcome.tie),
+                    onPressed: () => _record(ref, ComparisonOutcome.tie),
                     style: OutlinedButton.styleFrom(
                       // De-emphasized but ENABLED: use the secondary-text
                       // role. `outline` is a border token — under the
@@ -159,10 +172,10 @@ class _MatchupBody extends ConsumerWidget {
                       foregroundColor:
                           Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    child: const Text("Don't care"),
+                    child: const Text('Don’t care'),
                   ),
                   TextButton(
-                    onPressed: () => _record(ref, MatchOutcome.skip),
+                    onPressed: () => _record(ref, ComparisonOutcome.skip),
                     child: const Text('Skip'),
                   ),
                 ],
@@ -175,11 +188,20 @@ class _MatchupBody extends ConsumerWidget {
                     final sessionRepo =
                         ref.read(sessionRepositoryProvider);
                     await sessionRepo.markComplete(sessionId);
+                    // Partner B finishing with A already done is the moment
+                    // the couple flow exists for: go to the reveal.
+                    final partnerA = partnerASessionId;
+                    final aDone = partnerA != null &&
+                        ((await sessionRepo.getSession(partnerA))
+                                ?.isComplete ??
+                            false);
                     if (!context.mounted) return;
                     ref.invalidate(allSessionsProvider);
-                    context.pushReplacement('/results/solo/$sessionId');
+                    context.pushReplacement(aDone
+                        ? '/results/couple?a=$partnerA&b=$sessionId'
+                        : '/results/solo/$sessionId');
                   },
-                  label: const Text("I'm done — see results"),
+                  label: const Text('I’m done, see results'),
                 ),
               ],
             ],
@@ -195,7 +217,7 @@ class _NameCard extends StatelessWidget {
   final String display;
   final VoidCallback onTap;
 
-  const _NameCard({required this.display, required this.onTap});
+  const _NameCard({super.key, required this.display, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +239,7 @@ class _NameCard extends StatelessWidget {
                 display,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.w300,
+                  fontWeight: FontWeight.w400,
                   letterSpacing: 1.2,
                   color: theme.colorScheme.onSecondaryContainer,
                 ),
@@ -279,18 +301,26 @@ class _ConvergedView extends ConsumerStatefulWidget {
 class _ConvergedViewState extends ConsumerState<_ConvergedView> {
   bool _navigating = false;
 
-  Future<void> _completeAndGo(String route, {bool replace = true}) async {
-    if (_navigating) return;
+  Future<void> _completeAndGo(String route) async {
+    if (!await _complete()) return;
+    if (!mounted) return;
+    context.pushReplacement(route);
+  }
+
+  Future<void> _completeAndHandOff() async {
+    if (!await _complete()) return;
+    if (!mounted) return;
+    handOffToPartner(context, widget.sessionId);
+  }
+
+  Future<bool> _complete() async {
+    if (_navigating) return false;
     setState(() => _navigating = true);
     final sessionRepo = ref.read(sessionRepositoryProvider);
     await sessionRepo.markComplete(widget.sessionId);
-    if (!mounted) return;
+    if (!mounted) return false;
     ref.invalidate(allSessionsProvider);
-    if (replace) {
-      context.pushReplacement(route);
-    } else {
-      context.push(route);
-    }
+    return true;
   }
 
   @override
@@ -304,7 +334,7 @@ class _ConvergedViewState extends ConsumerState<_ConvergedView> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("You're done — but keep refining if you want.",
+            Text('You’re done.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 32),
@@ -337,9 +367,7 @@ class _ConvergedViewState extends ConsumerState<_ConvergedView> {
               OutlinedButton(
                 onPressed: _navigating
                     ? null
-                    : () => _completeAndGo(
-                        '/pool-config?partnerB=1&partnerA=$sessionId',
-                        replace: false),
+                    : _completeAndHandOff,
                 child: const Text('Pass Phone to Partner'),
               ),
             ],

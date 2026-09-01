@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lilt/domain/models/name.dart';
+import 'package:openhearth_design/openhearth_design.dart';
 
 class VetoScreen extends StatefulWidget {
   final List<Name> pool;
@@ -49,61 +50,64 @@ class _VetoScreenState extends State<VetoScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          LinearProgressIndicator(value: progress),
-          if (removedCount > 0)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                '$removedCount removed',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          Expanded(
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
+      body: OhPage(
+        padding: EdgeInsets.zero,
+        child: Column(
+          children: [
+            LinearProgressIndicator(value: progress),
+            if (removedCount > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
                 child: Text(
-                  name.display,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w300,
-                      ),
+                  '$removedCount removed',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Text(
+                    name.display,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w400,
+                        ),
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(32, 0, 32, 48),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.close),
-                    label: const Text('Remove'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          Theme.of(context).colorScheme.error,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(32, 0, 32, 48),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.close),
+                      label: const Text('Remove'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor:
+                            Theme.of(context).colorScheme.error,
+                      ),
+                      onPressed: () => setState(() {
+                        _vetoed.add(name.id);
+                        _index++;
+                      }),
                     ),
-                    onPressed: () => setState(() {
-                      _vetoed.add(name.id);
-                      _index++;
-                    }),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.check),
-                    label: const Text('Keep'),
-                    onPressed: () => setState(() => _index++),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.check),
+                      label: const Text('Keep'),
+                      onPressed: () => setState(() => _index++),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -9,6 +9,9 @@ class NameSession {
   final DateTime createdAt;
   final DateTime? completedAt;
 
+  /// The other session of a same-device couple; null for solo sessions.
+  final String? partnerSessionId;
+
   const NameSession({
     required this.id,
     this.participantLabel,
@@ -19,6 +22,7 @@ class NameSession {
     required this.resultsLocked,
     required this.createdAt,
     this.completedAt,
+    this.partnerSessionId,
   });
 
   NameSession copyWith({
@@ -36,5 +40,6 @@ class NameSession {
         resultsLocked: resultsLocked ?? this.resultsLocked,
         createdAt: createdAt,
         completedAt: completedAt ?? this.completedAt,
+        partnerSessionId: partnerSessionId,
       );
 }

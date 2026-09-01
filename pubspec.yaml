@@ -27,9 +27,9 @@ dependencies:
     path: ../eloEngine
 
   # OpenHearth design grammar (sibling path dep): OhTheme tri-theme +
-  # OhColors tokens + OhTypography. Fonts are resolved from THIS app's
-  # bundled assets (see the fonts: block below) — the package never
-  # fetches from the network.
+  # OhColors tokens + OhTypography. Lora and Nunito ship inside the
+  # package as package fonts (OFL, openhearth_design/fonts/OFL.txt), so
+  # the app bundles no font files and nothing is fetched from the network.
   openhearth_design:
     path: ../ohStyle/openhearth_design
 
@@ -69,25 +69,3 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/names.json
-
-  # Bundled faces for the openhearth_design grammar (OFL; same files the
-  # rest of the fleet ships). OhTypography looks these families up by name.
-  fonts:
-    - family: Lora
-      fonts:
-        - asset: assets/fonts/Lora-Regular.ttf
-        - asset: assets/fonts/Lora-Italic.ttf
-          style: italic
-        - asset: assets/fonts/Lora-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Lora-Bold.ttf
-          weight: 700
-    - family: Nunito
-      fonts:
-        - asset: assets/fonts/Nunito-Regular.ttf
-        - asset: assets/fonts/Nunito-Medium.ttf
-          weight: 500
-        - asset: assets/fonts/Nunito-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Nunito-Bold.ttf
-          weight: 700

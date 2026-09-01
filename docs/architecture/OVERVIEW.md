@@ -39,8 +39,8 @@ Two facts to hold onto:
    replaying that history on every read. Record and undo are just row insert/delete
    followed by a rebuild. See [ADR-0002](../adr/0002-history-is-source-of-truth.md).
 2. **Results are gated, not just computed.** A session is `resultsLocked` by default, and
-   the couple-results route refuses to render until *both* partners are complete and
-   locked. See [ADR-0004](../adr/0004-peeking-prevention.md).
+   neither the couple-results route nor either partner's own results route renders until
+   *both* partners are complete (the pairing is persisted at hand-off). See [ADR-0004](../adr/0004-peeking-prevention.md).
 
 ## The layers (Clean Architecture)
 
@@ -114,8 +114,8 @@ flowchart TB
 
 | Concern | Files |
 |---|---|
-| **App shell** | `lib/main.dart`, `lib/app/app.dart` (theme, bootstrap splash, 760px desktop clamp), `lib/app/router.dart` |
-| **Domain models** | `lib/domain/models/name.dart`, `name_session.dart`, `shortlist_entry.dart` |
+| **App shell** | `lib/main.dart`, `lib/app/app.dart` (theme + stored theme mode, bootstrap splash); each screen caps its own width with `OhPage`, `lib/app/router.dart` |
+| **Domain models** | `lib/domain/models/name.dart`, `name_session.dart`, `shortlist_entry.dart`, `ranking.dart` |
 | **Repositories (domain logic)** | `lib/domain/repositories/names_repository.dart`, `session_repository.dart` (★ the only `elo_engine` seam), `shortlist_repository.dart` |
 | **Data layer** | `lib/services/database/tables.dart`, `database.dart`, `daos/{names,session,elo_matches,shortlist}_dao.dart` (+ `.g.dart`) |
 | **Platform DB glue** | `lib/services/database/connection/{connection,native,web}.dart` |
@@ -135,6 +135,7 @@ a feature. (See [VISION.md](../VISION.md) and the ADRs.)
 1. **Local-first, no account, no network.** Nothing is sent off-device except an explicit
    share.
 2. **History is the source of truth.** Ratings are derived by replay, never persisted.
-3. **Peeking prevention.** Locked-by-default; the couple route is guarded.
+3. **Peeking prevention.** Locked-by-default; the couple route and a paired session's
+   solo route are guarded.
 4. **Clean layering.** One `elo_engine` seam; the UI never touches Drift rows directly.
 5. **Reproducibility.** The same match history always yields the same ranking.

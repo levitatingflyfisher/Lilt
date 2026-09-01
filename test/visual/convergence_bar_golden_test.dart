@@ -1,7 +1,7 @@
-import 'package:elo_engine/elo_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lilt/app/theme.dart';
+import 'package:lilt/domain/models/ranking.dart';
 import 'package:lilt/features/matchup/matchup_notifier.dart';
 import 'package:lilt/features/matchup/matchup_screen.dart' show ConvergenceBar;
 
@@ -12,8 +12,7 @@ import 'visual_golden_helper.dart';
 ///
 /// The widget is exported via `@visibleForTesting`, so this exercises the
 /// shipped widget directly — no copy that can drift. It only needs a
-/// [MatchupState], which we build from a tiny in-memory [EloEngine] (no DB,
-/// no Riverpod required).
+/// [MatchupState], built directly from domain values (no DB, no Riverpod).
 void main() {
   // The real app theme (lib/app/theme.dart) — goldens render the shipped
   // openhearth_design grammar, not a hand-rolled mirror that can drift.
@@ -21,16 +20,12 @@ void main() {
 
   // A mid-progress, not-yet-converged state. `progressLabel` renders
   // "Match 5 of ~12" and the bar fills to ~0.42.
-  final engine = EloEngine(
-    items: [EloItem(id: 'a-m'), EloItem(id: 'b-m'), EloItem(id: 'c-m')],
-  );
-  final state = MatchupState(
-    engine: engine,
-    nextMatch: engine.nextMatch(),
+  const state = MatchupState(
+    next: NamePair('a-m', 'b-m'),
     isConverged: false,
     matchCount: 5,
     estimatedTarget: 12,
-    idToDisplay: const {'a-m': 'Alpha', 'b-m': 'Beta', 'c-m': 'Charlie'},
+    idToDisplay: {'a-m': 'Alpha', 'b-m': 'Beta', 'c-m': 'Charlie'},
   );
 
   testWidgets('ConvergenceBar renders across sizes and text scales',

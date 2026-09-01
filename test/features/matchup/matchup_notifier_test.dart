@@ -1,5 +1,5 @@
 import 'package:drift/native.dart';
-import 'package:elo_engine/elo_engine.dart';
+import 'package:lilt/domain/models/ranking.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lilt/core/providers/database_provider.dart';
@@ -60,7 +60,7 @@ void main() {
 
   test('initial state has a next match proposal', () async {
     final state = await _container.read(matchupProvider(_sessionId).future);
-    expect(state.nextMatch, isNotNull);
+    expect(state.next, isNotNull);
     expect(state.isConverged, isFalse);
     expect(state.matchCount, 0);
   });
@@ -78,10 +78,10 @@ void main() {
         _container.read(matchupProvider(_sessionId).notifier);
     final initial =
         await _container.read(matchupProvider(_sessionId).future);
-    final proposal = initial.nextMatch!;
+    final proposal = initial.next!;
 
     await notifier.record(
-        proposal.itemA.id, proposal.itemB.id, MatchOutcome.aWins);
+        proposal.firstId, proposal.secondId, ComparisonOutcome.aWins);
 
     final updated =
         await _container.read(matchupProvider(_sessionId).future);
@@ -94,10 +94,10 @@ void main() {
         _container.read(matchupProvider(_sessionId).notifier);
     final initial =
         await _container.read(matchupProvider(_sessionId).future);
-    final proposal = initial.nextMatch!;
+    final proposal = initial.next!;
 
     await notifier.record(
-        proposal.itemA.id, proposal.itemB.id, MatchOutcome.aWins);
+        proposal.firstId, proposal.secondId, ComparisonOutcome.aWins);
     await notifier.undo();
 
     final reverted =

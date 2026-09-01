@@ -81,18 +81,23 @@ tests win; if the tests and reality disagree, reality wins. As of v1.0.0:
 - The **solo loop** — pool config → matchup → results — is complete. Config covers
   gender filter, size presets (30/60/120) + custom (10–200), custom name adds, hard
   vetoes, and a quick swipe-veto pass. Matchup does pairwise choice with skip, undo,
-  and a progress estimate. Results show a ranked list with rating bars and an optional
+  and a progress estimate. Results show a ranked list whose bars sit on a fixed scale
+  (each name's chance of beating an average name in the pool) and an optional
   "show methodology" ensemble view.
 - The **data layer** — 4 Drift tables, 4 DAOs, 3 repositories — is fully unit-tested on
   in-memory SQLite, including the replay-from-history rebuild (`buildEngine`), record,
   and undo-ordering.
-- **Peeking prevention**: locked-by-default sessions plus a couple-results route guard
-  that refuses to render until both sessions are complete *and* locked.
+- **Peeking prevention**: locked-by-default sessions, a persisted couple pairing, and
+  route guards on both the couple results and each partner's own results that refuse
+  to render until both sessions are complete; the hand-off leaves nothing of Partner A's
+  in the back stack. Pinned by `test/widget/navigation/peeking_lock_test.dart`.
 - **Same-device two-player**: Partner A finishes → hands the phone to Partner B (same
   pool) → a "Matches" screen shows the top-20 overlap, ordered by agreement.
 - Runs as an **Android APK and a PWA** (Drift conditional connection + WASM on web).
   Golden + overflow visual tests cover home, matchup, the ranked tile, and the
-  convergence bar at text scale 1.0 and 3.0.
+  convergence bar at text scale 1.0 and 3.0; seven primary-action screens are swept at
+  360dp × 1.3 and 320dp × 3.0. Each screen caps its width (`OhPage`) on wide windows,
+  and the theme is light, dark or follow the phone from the app bar.
 - **Encrypted backup/restore** (`.ohbk`, via `sanctuary_auth_core` /
   `sanctuary_backup_ui`) — a 12-word recovery phrase, destructive-replace restore in one
   transaction, and a domain-separated key so a Lilt backup only ever opens in Lilt. This
@@ -100,8 +105,9 @@ tests win; if the tests and reality disagree, reality wins. As of v1.0.0:
   merge described under "Mid" below.
 
 **Aspirational — still a hope, or thinly verified:**
-- The **couple/results *screens* have no widget tests** — only the data layer beneath
-  them is covered. Treat the couple-matching UI as built-but-thinly-verified.
+- The **couple/results screens are tested for their numbers, not their design**: widget
+  tests pin the bars' scale, the rank pairs and the peeking lock, but the Matches layout
+  itself (three columns, top-20 overlap) is contested in the audit and unresolved.
 - **PDF export does not exist.** The `pdf` package is a dependency but is never
   imported; every "share" is plain text. Wire it or drop the dep — don't document it as
   shipped.

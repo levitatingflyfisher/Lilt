@@ -89,7 +89,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Encrypted Backup'), findsOneWidget);
+      expect(find.text('Backup'), findsOneWidget);
     });
   });
 }

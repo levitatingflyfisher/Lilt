@@ -7,7 +7,7 @@ class NameEntries extends Table {
   TextColumn get id => text()(); // e.g. "eliot-m"
   TextColumn get display => text()(); // e.g. "Eliot"
   TextColumn get gender => text()(); // "m" | "f" | "n"
-  TextColumn get variants => text()(); // JSON array, e.g. '["Elliott","Elliot"]'
+  TextColumn get variants => text()(); // JSON array of variant spellings
   BoolColumn get isCustom =>
       boolean().withDefault(const Constant(false))();
 
@@ -32,6 +32,13 @@ class Sessions extends Table {
       boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+  /// The other half of a same-device couple, set on BOTH rows at hand-off.
+  /// Null for solo sessions (and for couples created before schema v2).
+  TextColumn get partnerSessionId => text().nullable()();
+  /// Set by "Clear all sessions" (a soft delete); null for a live session.
+  /// A cleared session is invisible to every screen and guard until it is
+  /// restored from Settings' Recently cleared list or deleted forever.
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

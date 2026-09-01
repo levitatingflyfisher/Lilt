@@ -10,6 +10,9 @@ import 'package:lilt/domain/repositories/names_repository.dart';
 import 'package:lilt/domain/repositories/session_repository.dart';
 import 'package:lilt/features/home/home_screen.dart';
 import 'package:lilt/services/database/database.dart';
+import 'package:sanctuary_auth_core/sanctuary_auth_core.dart';
+import 'package:sanctuary_backup_ui/sanctuary_backup_ui.dart';
+import 'package:sanctuary_backup_ui/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'visual_golden_helper.dart';
@@ -82,6 +85,14 @@ Future<(AppDatabase, ProviderContainer)> _seed() async {
   final container = ProviderContainer(overrides: [
     databaseProvider.overrideWithValue(db),
     sharedPreferencesProvider.overrideWithValue(prefs),
+    // No backup words yet, so Home shows its Finish setup line.
+    secureKeyStoreProvider.overrideWithValue(InMemorySecureKeyStore()),
+    cryptoServiceProvider.overrideWithValue(FakeCryptoService()),
+    sanctuaryAppDomainProvider.overrideWithValue('lilt'),
+    sanctuaryBackupConfigProvider.overrideWithValue(const SanctuaryBackupConfig(
+        appId: 'lilt', aadContext: 'lilt-backup/v1', appDisplayName: 'Lilt')),
+    backupReminderStoreProvider
+        .overrideWithValue(InMemoryBackupReminderStore()),
   ]);
   return (db, container);
 }

@@ -1,5 +1,6 @@
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lilt/core/providers/database_provider.dart';
@@ -73,6 +74,39 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    expect(tester.takeException(), isNull);
+  });
+
+  // openhearth_design 0.9 folds bar words by space, not above a fixed 1.5x:
+  // "Lilt" and a lone "Undo" fit a 320 dp bar at 3.0x, so the word stays
+  // (0.8.0 folded it to a bare glyph here). Undo is the matchup's only
+  // way back, so its name matters.
+  testWidgets('the lone Undo keeps its word at 320dp / textScale 3.0',
+      (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(320, 800);
+
+    await tester.pumpWidget(MaterialApp(
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context)
+            .copyWith(textScaler: const TextScaler.linear(3.0)),
+        child: child!,
+      ),
+      home: UncontrolledProviderScope(
+        container: container,
+        child: MatchupScreen(sessionId: sessionId),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    final bar = find.byType(AppBar);
+    expect(find.descendant(of: bar, matching: find.text('Undo')),
+        findsOneWidget);
+    final title = tester.renderObject<RenderParagraph>(
+        find.descendant(of: bar, matching: find.text('Lilt')));
+    expect(title.didExceedMaxLines, isFalse, reason: 'the title is cut off');
     expect(tester.takeException(), isNull);
   });
 }

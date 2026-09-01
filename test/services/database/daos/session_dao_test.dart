@@ -47,9 +47,15 @@ void main() {
     expect((await db.sessionDao.getAllSessions()).length, 2);
   });
 
-  test('deleteSession removes the row', () async {
+  test('clearAll hides rows; deleteClearedForever removes only cleared',
+      () async {
     await db.sessionDao.insertSession(_session('s1'));
-    await db.sessionDao.deleteSession('s1');
+    await db.sessionDao.clearAll(DateTime(2026, 9, 27));
+    await db.sessionDao.insertSession(_session('s2'));
     expect(await db.sessionDao.getSession('s1'), isNull);
+    expect((await db.sessionDao.getClearedSessions()).single.id, 's1');
+    await db.sessionDao.deleteClearedForever();
+    expect(await db.sessionDao.getClearedSessions(), isEmpty);
+    expect((await db.sessionDao.getAllSessions()).single.id, 's2');
   });
 }

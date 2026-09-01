@@ -1,7 +1,8 @@
 # How-to: encrypted backup & restore
 
-Task-oriented. Assumes you've already run Lilt at least once (Settings → Encrypted
-Backup requires the app database to exist).
+Task-oriented. Assumes you've already run Lilt at least once (Settings → Backup requires the app
+database to exist). Until backup is set up, Home shows a one-line "Backup isn't set up"
+reminder with **Set up** and **Dismiss**; dismissing hides it for 30 days.
 
 ## What this is, and isn't
 
@@ -18,7 +19,10 @@ cryptographic detail (BIP39 mnemonic → HKDF-SHA256 → ChaCha20-Poly1305). Lil
 own isolated key material (`appDomain: 'lilt'`) and its own AEAD context
 (`lilt-backup/v1`): a Lilt backup can only ever be opened by Lilt, and — because the key
 is domain-separated — even a shared recovery phrase used by another OpenHearth app on
-the same device does not cross-decrypt Lilt's blob.
+the same device does not cross-decrypt Lilt's blob. In the browser, where every fleet
+PWA shares one origin, Lilt stores its recovery words under its own keys
+(`appScopedKeyStoreOverride`, in `lib/app/root_overrides.dart`), so it never reads
+another app's words.
 
 ## The honest version of "recovery phrase"
 
@@ -31,20 +35,20 @@ words later.
 
 ## Set up
 
-1. Settings → **Encrypted Backup** → **Set up encrypted backup**.
+1. Settings → **Backup** → **Set up encrypted backup**.
 2. Write down the 12 words shown, then re-enter them when prompted. A mismatch is
    caught here, not months later when you actually need the backup.
 
 ## Export
 
-Settings → Encrypted Backup → **Export backup**. This produces
+Settings → Backup → **Export backup**. This produces
 `lilt-backup-<yyyy-MM-dd>.ohbk` and hands it to the OS share sheet — send it wherever
 you keep things you trust. The file is opaque ChaCha20-Poly1305 ciphertext; without the
 12 words it reveals nothing.
 
 ## Restore
 
-Settings → Encrypted Backup → **Restore from backup**, then pick an `.ohbk` file.
+Settings → Backup → **Restore from backup**, then pick an `.ohbk` file.
 
 **This is destructive.** Restoring replaces every custom name, ranking session,
 comparison, and shortlist entry currently on this device with the contents of the
@@ -65,9 +69,9 @@ phrase yields a calm, specific message — never a partial restore.
 | Entered words that don't unlock this file | "Those words didn't unlock this backup. Try the words from when it was made." |
 | Restored a backup made by a newer version of Lilt | "This backup was made by a newer version of Lilt. Update the app, then restore." |
 
-## Reset identity
+## Remove recovery words
 
-Settings → Encrypted Backup → **Reset identity** wipes the recovery words from *this
+Settings → Backup → **Remove recovery words** wipes the recovery words from *this
 device only* — your existing app data is untouched. You'll need a new phrase (and a new
 backup) going forward; any backup made under the old words is only recoverable with
 those old words.

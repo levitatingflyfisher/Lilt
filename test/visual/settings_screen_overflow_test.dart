@@ -84,14 +84,14 @@ void main() {
     // widget's own layout at 320dp/textScale 3.0, not just the tiles above
     // the fold.
     await tester.scrollUntilVisible(
-      find.text('Encrypted Backup'),
+      find.text('Backup'),
       300,
       scrollable: find.byType(Scrollable),
     );
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Encrypted Backup'), findsOneWidget);
+    expect(find.text('Backup'), findsOneWidget);
     expect(find.text('Export backup'), findsOneWidget);
   });
 }

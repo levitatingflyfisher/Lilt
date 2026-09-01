@@ -1,11 +1,11 @@
-import 'package:elo_engine/elo_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lilt/core/providers/repository_providers.dart';
 import 'package:lilt/core/providers/settings_providers.dart';
+import 'package:lilt/domain/models/ranking.dart';
 
 class MatchupState {
-  final EloEngine engine;
-  final MatchProposal? nextMatch;
+  /// The next two names to compare, or null when none are left.
+  final NamePair? next;
   final bool isConverged;
   final int matchCount;
   final int estimatedTarget;
@@ -14,8 +14,7 @@ class MatchupState {
   final Map<String, String> idToDisplay;
 
   const MatchupState({
-    required this.engine,
-    this.nextMatch,
+    this.next,
     required this.isConverged,
     required this.matchCount,
     required this.estimatedTarget,
@@ -33,7 +32,7 @@ class MatchupState {
   bool get canExitEarly => matchCount >= (estimatedTarget * 0.4).ceil();
 
   String get progressLabel {
-    if (isConverged) return "You're done — keep refining if you want";
+    if (isConverged) return 'You’re done';
     return 'Match $matchCount of ~$estimatedTarget';
   }
 }
@@ -52,7 +51,8 @@ class MatchupNotifier extends FamilyAsyncNotifier<MatchupState, String> {
 
     final session = await sessionRepo.getSession(sessionId);
     final tau = ref.read(convergenceTauProvider);
-    final engine = await sessionRepo.buildEngine(sessionId, convergenceTau: tau);
+    final ranking =
+        await sessionRepo.ranking(sessionId, convergenceTau: tau);
     final matchCount = await sessionRepo.getNonSkipMatchCount(sessionId);
 
     final poolIds = session?.poolIds ?? [];
@@ -60,16 +60,16 @@ class MatchupNotifier extends FamilyAsyncNotifier<MatchupState, String> {
     final idToDisplay = {for (final n in names) n.id: n.display};
 
     return MatchupState(
-      engine: engine,
-      nextMatch: engine.nextMatch(),
-      isConverged: engine.isConverged,
+      next: ranking.next,
+      isConverged: ranking.isConverged,
       matchCount: matchCount,
       estimatedTarget: _estimatedTarget(session?.poolSize ?? 60),
       idToDisplay: idToDisplay,
     );
   }
 
-  Future<void> record(String idA, String idB, MatchOutcome outcome) async {
+  Future<void> record(
+      String idA, String idB, ComparisonOutcome outcome) async {
     if (_recording) return;
     _recording = true;
     try {

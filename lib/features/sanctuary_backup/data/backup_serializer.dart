@@ -155,6 +155,8 @@ class LiltBackupSerializer
                 resultsLocked: Value(row['resultsLocked'] as bool? ?? true),
                 createdAt: _dateTime(row['createdAt']),
                 completedAt: Value(_dateTimeOrNull(row['completedAt'])),
+                partnerSessionId: Value(row['partnerSessionId'] as String?),
+                deletedAt: Value(_dateTimeOrNull(row['deletedAt'])),
               ),
             );
       }

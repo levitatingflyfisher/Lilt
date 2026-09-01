@@ -40,7 +40,8 @@ separate library, [`eloEngine`](../eloEngine); this repo is the product on top o
   If you cache, cache a *rebuild*, never a rating.
 - **Peeking prevention stays locked-by-default.** Do not weaken the couple-results
   route guard (`/results/couple` redirects home unless both sessions are complete *and*
-  locked).
+  locked), the paired-session guard on `/results/solo`, or the hand-off's back-stack
+  clear (`handOffToPartner`).
 - **Respect the layering.** `features/` (presentation) → `repositories/` (domain) →
   `daos/` + Drift (data). The UI must not import Drift rows or `elo_engine` directly.
   **Exactly one file imports `elo_engine`:** `lib/domain/repositories/session_repository.dart`.
@@ -61,14 +62,14 @@ The short version, by concern:
 
 | You're touching… | Go to |
 |---|---|
-| **App shell / routing** | `lib/main.dart`, `lib/app/app.dart` (theme, bootstrap splash, 760px desktop clamp), `lib/app/router.dart` (8 routes + couple guard) |
-| **The ranking integration** | `lib/domain/repositories/session_repository.dart` — the *only* `elo_engine` consumer (`buildEngine`, `recordMatch`, `undoLastMatch`) |
+| **App shell / routing** | `lib/main.dart` + `lib/app/root_overrides.dart` (the root provider overrides: backup wiring, per-app web key store), `lib/app/app.dart` (theme + stored theme mode, bootstrap splash), `lib/app/theme_toggle.dart` (the app-bar light/dark/follow-phone switch), `lib/app/router.dart` (8 routes + the two peeking guards + `handOffToPartner`) |
+| **The ranking integration** | `lib/domain/repositories/session_repository.dart` — the *only* `elo_engine` consumer (`buildEngine`, `ranking`, `methodology`, `recordMatch`, `undoLastMatch`); `test/unit/layering_test.dart` fails if another file imports it or a feature calls `buildEngine` |
 | **The matchup loop** | `lib/features/matchup/matchup_notifier.dart` (state, progress, record/undo), `matchup_screen.dart` |
 | **Results** | `lib/features/results/solo_results_screen.dart` (ranking bars + "show methodology" ensemble), `couple_results_screen.dart` (top-20 overlap, harmonic-mean) |
 | **Pool setup** | `lib/features/pool_config/pool_config_screen.dart` (filter, size, custom adds, vetoes), `veto_screen.dart` (swipe veto pass) |
 | **Shortlist / detail / settings** | `lib/features/shortlist/`, `name_detail/`, `settings/` |
 | **The data model** | `lib/services/database/tables.dart` (4 tables), `database.dart`, `daos/` (4 DAOs) |
-| **Domain models** | `lib/domain/models/` (`name.dart`, `name_session.dart`, `shortlist_entry.dart`) |
+| **Domain models** | `lib/domain/models/` (`name.dart`, `name_session.dart`, `shortlist_entry.dart`, `ranking.dart` — the engine's output as the UI sees it) |
 | **Providers / config** | `lib/core/providers/` (`repository_providers`, `bootstrap_provider`, `settings_providers` — convergence τ) |
 | **The name catalog** | `assets/data/names.json` (~1,636 names), built by `scripts/build_name_dataset.py` |
 | **Web / native DB glue** | `lib/services/database/connection/` (`native.dart`, `web.dart`, `connection.dart`) |

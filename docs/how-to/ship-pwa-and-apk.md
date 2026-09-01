@@ -20,8 +20,8 @@ Output lands in `build/web/`. It bundles the Drift web backend — `web/sqlite3.
 Things to know:
 
 - The app requests **persistent storage** so PWA data survives browser eviction.
-- On desktop-width viewports the UI clamps to a **760px** centered column (it's a
-  phone-shaped app), so it stays usable in a wide browser window.
+- On desktop-width viewports each screen's content is capped at **640px** and centered
+  (`OhPage`; it's a phone-shaped app), so it stays usable in a wide browser window.
 - Serve `build/web/` from any static host. `web/manifest.json` and `web/icons/` make it
   installable as a PWA.
 

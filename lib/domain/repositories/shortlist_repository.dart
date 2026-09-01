@@ -49,4 +49,16 @@ class ShortlistRepository {
       _dao.updateNote(id, note);
 
   Future<void> remove(String id) => _dao.remove(id);
+
+  /// Puts back an entry that [remove] took out, with its id, note and date,
+  /// so an Undo leaves no trace of the removal.
+  Future<void> restore(ShortlistEntry entry) async {
+    if (await _dao.isInShortlist(entry.name.id)) return;
+    await _dao.add(ShortlistEntriesCompanion.insert(
+      id: entry.id,
+      nameId: entry.name.id,
+      note: Value(entry.note),
+      addedAt: entry.addedAt,
+    ));
+  }
 }

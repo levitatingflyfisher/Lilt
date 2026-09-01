@@ -6,6 +6,8 @@ import 'package:lilt/core/providers/repository_providers.dart';
 import 'package:lilt/domain/models/name.dart';
 import 'package:lilt/features/home/home_screen.dart';
 import 'package:lilt/features/pool_config/veto_screen.dart';
+import 'package:openhearth_design/openhearth_design.dart';
+import 'package:lilt/app/theme_toggle.dart';
 
 enum _PoolPreset { quick, standard, comprehensive, custom }
 
@@ -56,18 +58,15 @@ class _PoolConfigScreenState extends ConsumerState<PoolConfigScreen> {
     if (!mounted) return;
     if (partnerA == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Partner A's session not found.")),
+        const SnackBar(content: Text('Partner A’s session was not found.')),
       );
       setState(() => _autoStarting = false);
       return;
     }
 
-    final session = await sessionRepo.createSession(
-      participantLabel: 'Partner B',
-      poolIds: partnerA.poolIds,
-      genderFilter: partnerA.genderFilter,
-      poolSize: partnerA.poolSize,
-    );
+    // Persists the pairing on both rows, so Home, a resumed Partner B and
+    // the results guards never have to infer it.
+    final session = await sessionRepo.createPartnerSession(partnerA.id);
     if (!mounted) return;
     ref.invalidate(allSessionsProvider);
     context.pushReplacement(
@@ -189,181 +188,185 @@ class _PoolConfigScreenState extends ConsumerState<PoolConfigScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isPartnerB
-            ? 'Partner B — Configure Pool'
+            ? 'Partner B: Set Up Your Pool'
             : 'Set Up Your Pool'),
+        actions: const [OhBarActions(children: [LiltThemeToggle()])],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (widget.isPartnerB)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 16),
-                child: Text(
-                  'Partner A has finished. Configure your session with the same pool.',
-                  style: TextStyle(fontStyle: FontStyle.italic),
-                ),
-              ),
-            Text('Gender', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            SegmentedButton<NameGender?>(
-              segments: const [
-                ButtonSegment(value: null, label: Text('All')),
-                ButtonSegment(value: NameGender.male, label: Text('Boys')),
-                ButtonSegment(value: NameGender.female, label: Text('Girls')),
-              ],
-              selected: {_genderFilter},
-              onSelectionChanged: (s) =>
-                  setState(() => _genderFilter = s.first),
-            ),
-            const SizedBox(height: 24),
-            Text('Pool Size', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            RadioGroup<_PoolPreset>(
-              groupValue: _preset,
-              onChanged: (v) => setState(() => _preset = v!),
-              child: Column(
-                children: _PoolPreset.values.map((preset) {
-                  final label = switch (preset) {
-                    _PoolPreset.quick => 'Quick  (~30 names)',
-                    _PoolPreset.standard => 'Standard  (~60 names)',
-                    _PoolPreset.comprehensive => 'Comprehensive  (~120 names)',
-                    _PoolPreset.custom => 'Custom',
-                  };
-                  return RadioListTile<_PoolPreset>(
-                    value: preset,
-                    title: Text(label),
-                    contentPadding: EdgeInsets.zero,
-                  );
-                }).toList(),
-              ),
-            ),
-            if (_preset == _PoolPreset.custom)
-              Slider(
-                value: _customSize.toDouble(),
-                min: 10,
-                max: 200,
-                divisions: 38,
-                label: '$_customSize names',
-                onChanged: (v) => setState(() => _customSize = v.round()),
-              ),
-            const SizedBox(height: 8),
-            Text(
-              '~$estimate comparisons to convergence',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 24),
-            Text('Add a Name (optional)',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              'A name not in our list? Add it here — it enters the ranking pool like any other.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _customNameController,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g. Cressida',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                  textCapitalization: TextCapitalization.words,
-                ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: () async {
-                  final text = _customNameController.text.trim();
-                  if (text.isEmpty) return;
-                  final gender = _genderFilter ?? NameGender.neutral;
-                  final id =
-                      '${text.toLowerCase()}-${Name.genderToCode(gender)}';
-                  final namesRepo = ref.read(namesRepositoryProvider);
-                  final existing = await namesRepo.getByIds([id]);
-                  if (existing.isEmpty) {
-                    await namesRepo.addCustomName(Name(
-                      id: id,
-                      display: text,
-                      gender: gender,
-                      isCustom: true,
-                    ));
-                  }
-                  setState(() => _customNameController.clear());
-                },
-                child: const Text('Add'),
-              ),
-            ]),
-            const SizedBox(height: 24),
-            Text('Hard Vetoes (optional)',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              'Names to exclude before ranking begins.',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Row(children: [
-              Expanded(
-                child: TextField(
-                  controller: _excludeController,
-                  decoration: const InputDecoration(
-                    hintText: 'Name to exclude',
-                    border: OutlineInputBorder(),
-                    isDense: true,
+      body: OhPage(
+        padding: EdgeInsets.zero,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (widget.isPartnerB)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Partner A has finished. Configure your session with the same pool.',
+                    style: TextStyle(fontStyle: FontStyle.italic),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              OutlinedButton(
-                onPressed: () async {
-                  final text = _excludeController.text.trim();
-                  if (text.isEmpty) return;
-                  final namesRepo = ref.read(namesRepositoryProvider);
-                  final all =
-                      await namesRepo.getForFilter(gender: _genderFilter);
-                  final match = all
-                      .where((n) =>
-                          n.display.toLowerCase() == text.toLowerCase())
-                      .toList();
-                  if (match.isNotEmpty) {
-                    setState(() => _excludeIds.add(match.first.id));
-                  } else {
-                    final gender = _genderFilter == null
-                        ? 'n'
-                        : Name.genderToCode(_genderFilter!);
-                    setState(() =>
-                        _excludeIds.add('${text.toLowerCase()}-$gender'));
-                  }
-                  _excludeController.clear();
-                },
-                child: const Text('Exclude'),
-              ),
-            ]),
-            if (_excludeIds.isNotEmpty) ...[
+              Text('Gender', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: _excludeIds
-                    .map((id) => Chip(
-                          label: Text(_displayFromId(id)),
-                          onDeleted: () =>
-                              setState(() => _excludeIds.remove(id)),
-                        ))
-                    .toList(),
+              SegmentedButton<NameGender?>(
+                segments: const [
+                  ButtonSegment(value: null, label: Text('All')),
+                  ButtonSegment(value: NameGender.male, label: Text('Boys')),
+                  ButtonSegment(value: NameGender.female, label: Text('Girls')),
+                ],
+                selected: {_genderFilter},
+                onSelectionChanged: (s) =>
+                    setState(() => _genderFilter = s.first),
+              ),
+              const SizedBox(height: 24),
+              Text('Pool Size', style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              RadioGroup<_PoolPreset>(
+                groupValue: _preset,
+                onChanged: (v) => setState(() => _preset = v!),
+                child: Column(
+                  children: _PoolPreset.values.map((preset) {
+                    final label = switch (preset) {
+                      _PoolPreset.quick => 'Quick  (~30 names)',
+                      _PoolPreset.standard => 'Standard  (~60 names)',
+                      _PoolPreset.comprehensive => 'Comprehensive  (~120 names)',
+                      _PoolPreset.custom => 'Custom',
+                    };
+                    return RadioListTile<_PoolPreset>(
+                      value: preset,
+                      title: Text(label),
+                      contentPadding: EdgeInsets.zero,
+                    );
+                  }).toList(),
+                ),
+              ),
+              if (_preset == _PoolPreset.custom)
+                Slider(
+                  value: _customSize.toDouble(),
+                  min: 10,
+                  max: 200,
+                  divisions: 38,
+                  label: '$_customSize names',
+                  onChanged: (v) => setState(() => _customSize = v.round()),
+                ),
+              const SizedBox(height: 8),
+              Text(
+                '~$estimate comparisons to convergence',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 24),
+              Text('Add a Name (optional)',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(
+                'A name not in our list? Add it here, and it enters the ranking pool like any other.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _customNameController,
+                    decoration: const InputDecoration(
+                      hintText: 'e.g. Cressida',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () async {
+                    final text = _customNameController.text.trim();
+                    if (text.isEmpty) return;
+                    final gender = _genderFilter ?? NameGender.neutral;
+                    final id =
+                        '${text.toLowerCase()}-${Name.genderToCode(gender)}';
+                    final namesRepo = ref.read(namesRepositoryProvider);
+                    final existing = await namesRepo.getByIds([id]);
+                    if (existing.isEmpty) {
+                      await namesRepo.addCustomName(Name(
+                        id: id,
+                        display: text,
+                        gender: gender,
+                        isCustom: true,
+                      ));
+                    }
+                    setState(() => _customNameController.clear());
+                  },
+                  child: const Text('Add'),
+                ),
+              ]),
+              const SizedBox(height: 24),
+              Text('Hard Vetoes (optional)',
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text(
+                'Names to exclude before ranking begins.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 8),
+              Row(children: [
+                Expanded(
+                  child: TextField(
+                    controller: _excludeController,
+                    decoration: const InputDecoration(
+                      hintText: 'Name to exclude',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: () async {
+                    final text = _excludeController.text.trim();
+                    if (text.isEmpty) return;
+                    final namesRepo = ref.read(namesRepositoryProvider);
+                    final all =
+                        await namesRepo.getForFilter(gender: _genderFilter);
+                    final match = all
+                        .where((n) =>
+                            n.display.toLowerCase() == text.toLowerCase())
+                        .toList();
+                    if (match.isNotEmpty) {
+                      setState(() => _excludeIds.add(match.first.id));
+                    } else {
+                      final gender = _genderFilter == null
+                          ? 'n'
+                          : Name.genderToCode(_genderFilter!);
+                      setState(() =>
+                          _excludeIds.add('${text.toLowerCase()}-$gender'));
+                    }
+                    _excludeController.clear();
+                  },
+                  child: const Text('Exclude'),
+                ),
+              ]),
+              if (_excludeIds.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: _excludeIds
+                      .map((id) => Chip(
+                            label: Text(_displayFromId(id)),
+                            onDeleted: () =>
+                                setState(() => _excludeIds.remove(id)),
+                          ))
+                      .toList(),
+                ),
+              ],
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: _startSession,
+                child: Text(widget.isPartnerB
+                    ? 'Start Partner B Session'
+                    : 'Start Ranking'),
               ),
             ],
-            const SizedBox(height: 32),
-            FilledButton(
-              onPressed: _startSession,
-              child: Text(widget.isPartnerB
-                  ? 'Start Partner B Session'
-                  : 'Start Ranking'),
-            ),
-          ],
+          ),
         ),
       ),
     );
