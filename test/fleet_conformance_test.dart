@@ -15,6 +15,8 @@ void main() => runFleetConformance(const FleetAppConfig(
         // points CanvasKit and the engine's fallback fonts at this origin.
         FleetCheck.c13WebSelfHosted,
         ...FleetAppConfig.withBundledFonts,
+        // C7-assetText: C7 over the bundled name list (assets/data/names.json): every name the pairs show.
+        FleetCheck.c7AssetText,
         FleetCheck.c8IconButtons,
         // C10: no raw exception text on screen; failures use OhErrorState.
         FleetCheck.c10RawErrors,
