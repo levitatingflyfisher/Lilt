@@ -1,5 +1,6 @@
 {
-  "main_dart_js_gz_max_bytes": 1046888,
+  "main_dart_js_gz_max_bytes": 1115132,
+  "_js_note": "2026-10-02 deliberate ratchet: fresh Flutter 3.38.7 release build = 1062030 bytes gzipped (GitHub CI and a clean local build agree), budget that +5%. Growth since the August CI pass is real code: openhearth_design 0.4.0->0.9.2 (shared top-bar actions/overflow), sanctuary_backup_ui 0.2->0.3 and September app work (top-bar migration, glyph fixes); fonts are assets, not main.dart.js; no hearth_sync dependency. Measure after deleting .dart_tool/flutter_build (incremental builds can reuse a stale main.dart.js).",
   "apk_arm64_max_bytes": 22581714,
   "note": "Baselines measured 2026-07-17 from the on-disk artifacts: build/web/main.dart.js (997036 bytes gzipped via gzip -c | wc -c) and build/app/outputs/flutter-apk/app-arm64-v8a-release.apk (19742886 bytes), each +5% rounded up.",
   "_apk_note": "2026-07-22 deliberate ratchet: fresh 3.38.7 release build = 21506394 bytes (+5%). Growth vs the stale 2026-07-17 baseline is libflutter.so + libapp.so (dark mode, backup v0.2.0) \u2014 APK teardown verified, no junk."
