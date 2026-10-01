@@ -57,6 +57,7 @@ and [limitations](../limitations.md). "Tests" means automated coverage that exis
   required by conformance check C5-primaryScreens.
 - **Guards** (`test/unit/`): layering (only the session repository imports `elo_engine`),
   copy typography, font weights and literal sizes, the PWA shell's name and colours, the
-  theme preference; `test/fleet_conformance_test.dart` runs C1–C12 including C9 routes,
-  C10 raw errors, C11 app-bar labels and C12 accent vs error.
+  theme preference; `test/fleet_conformance_test.dart` runs C1–C13 including C9 routes,
+  C10 raw errors, C11 app-bar labels, C12 accent vs error and C13 (the PWA loads nothing
+  from Google's CDNs; `web/flutter_bootstrap.js`).
 - **Gap:** the veto pass and pool setup have no content tests beyond the sweep.

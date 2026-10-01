@@ -289,13 +289,15 @@ class _NerdyModeWidget extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleSmall),
         const SizedBox(height: 4),
         Text(
-          'Kendall’s \u03c4 across 15 algorithms: ${tau.toStringAsFixed(2)}.'
+          'Kendall’s tau across 15 algorithms: ${tau.toStringAsFixed(2)}.'
           ' ${tau > 0.9 ? 'High confidence.' : tau > 0.7 ? 'Moderate agreement.' : 'Your preferences are nuanced, so hold rankings loosely.'}',
         ),
         const SizedBox(height: 2),
         // Operator ruling: the term stays, in this detail view, explained.
+        // Spelled out, not as the Greek letter: no bundled face draws U+03C4,
+        // and the self-hosted web build has no fallback that would.
         Text(
-          '\u03c4 is how closely two orderings agree, from \u22121 (opposite '
+          'Tau is how closely two orderings agree, from \u22121 (opposite '
           "orders) to 1 (identical), averaged over the 15 methods' rankings.",
           style: Theme.of(context).textTheme.bodySmall,
         ),
